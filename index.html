@@ -1,0 +1,1138 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kalkulator Penjanaan Pakej Bengkel</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+        }
+        input[type=number]::-webkit-inner-spin-button,
+        input[type=number]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+            body {
+                background-color: white !important;
+                padding-bottom: 0 !important;
+            }
+            .print-shadow-none {
+                box-shadow: none !important;
+                border: 1px solid #e2e8f0 !important;
+            }
+            .print-page-break {
+                page-break-inside: avoid;
+                break-inside: avoid;
+            }
+            .print-start-new-page {
+                page-break-before: always;
+                break-before: page;
+            }
+            .print-overflow-visible {
+                overflow: visible !important;
+            }
+            .print-table-fit {
+                width: 100% !important;
+                table-layout: auto !important;
+                font-size: 10px !important;
+            }
+            .print-table-fit th,
+            .print-table-fit td {
+                padding: 6px 4px !important;
+                white-space: normal !important;
+            }
+            .print-header-clean {
+                background-color: #f8fafc !important;
+                color: #0f172a !important;
+                border-bottom: 1px solid #cbd5e1 !important;
+            }
+            .print-header-clean p {
+                color: #475569 !important;
+            }
+            .print-badge-clean {
+                background-color: #ecfdf5 !important;
+                color: #065f46 !important;
+                border-color: #a7f3d0 !important;
+            }
+        }
+    </style>
+</head>
+<body class="text-slate-800 antialiased pb-16">
+
+    <!-- Notifikasi Toast -->
+    <div id="toast-box" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none no-print">
+        <div class="bg-slate-900 text-white px-4 py-3 rounded-xl shadow-lg flex items-center gap-3 text-sm font-medium">
+            <i data-lucide="check-circle-2" class="w-5 h-5 text-emerald-400"></i>
+            <span id="toast-message">Berjaya disalin!</span>
+        </div>
+    </div>
+
+    <!-- Header Utama -->
+    <header class="bg-gradient-to-r from-indigo-900 via-indigo-800 to-blue-900 text-white shadow-md no-print">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div>
+                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-700/60 border border-indigo-500/40 text-indigo-100 text-xs font-medium mb-2">
+                        <i data-lucide="calculator" class="w-3.5 h-3.5"></i>
+                        <span>Sistem Perancangan Kewangan & Perbandingan Pakej</span>
+                    </div>
+                    <h1 class="text-2xl sm:text-3xl font-bold tracking-tight">Kalkulator Penjanaan Pakej Bengkel</h1>
+                    <p class="text-indigo-200 text-sm mt-1">Urus maklumat setiap pakej secara berasingan dan bandingkan unjuran keuntungan secara langsung.</p>
+                </div>
+                <div class="flex flex-wrap items-center gap-2.5 no-print">
+                    <button onclick="copySummary()" class="inline-flex items-center gap-2 px-4 py-2.5 bg-white/10 hover:bg-white/20 text-white border border-white/20 rounded-xl text-sm font-medium transition cursor-pointer">
+                        <i data-lucide="copy" class="w-4 h-4"></i>
+                        <span>Salin Ringkasan (paste di Word)</span>
+                    </button>
+                    <button onclick="window.print()" class="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-sm font-semibold shadow-sm transition cursor-pointer">
+                        <i data-lucide="printer" class="w-4 h-4"></i>
+                        <span>Cetak / PDF</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Maklumat Asas Bengkel -->
+            <div class="mt-6 pt-5 border-t border-indigo-700/50 grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div class="sm:col-span-2">
+                    <label class="block text-xs font-medium text-indigo-200 mb-1">Nama / Tajuk Bengkel (Dikongsi untuk semua pakej)</label>
+                    <input type="text" id="workshop-title" placeholder="Contoh: Bengkel Pemantapan Kepimpinan & Strategi 2026" oninput="updateComparisonTable()"
+                        class="w-full px-3.5 py-2 bg-indigo-950/60 border border-indigo-600/60 rounded-xl text-white placeholder-indigo-400 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-indigo-200 mb-1">Pakej Aktif Disunting</label>
+                    <div id="active-package-badge" class="w-full px-3.5 py-2 bg-indigo-950/40 border border-indigo-600/40 rounded-xl text-emerald-300 font-semibold text-sm flex items-center gap-2">
+                        <i data-lucide="folder-open" class="w-4 h-4"></i>
+                        <span id="active-package-label">Pakej 3 Hari 2 Malam</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Kandungan Utama -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6 space-y-6">
+
+        <!-- Kepala Laporan Khas Untuk Cetakan / PDF -->
+        <div class="hidden print:block border-b-2 border-slate-800 pb-4 mb-4">
+            <p class="text-xs font-bold uppercase tracking-wider text-indigo-700">Laporan Penjanaan & Perbandingan Kewangan Pakej Bengkel</p>
+            <h1 id="print-workshop-title" class="text-2xl font-extrabold text-slate-900 mt-1">Cadangan Pakej Bengkel</h1>
+            <p id="print-date-label" class="text-xs text-slate-500 mt-1"></p>
+        </div>
+
+        <!-- Penukar Tab Pakej -->
+        <section class="bg-white rounded-2xl p-4 sm:p-5 shadow-sm border border-slate-200/80 print-shadow-none no-print">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+                <div class="flex items-center gap-2">
+                    <span class="p-1.5 bg-indigo-50 text-indigo-600 rounded-lg">
+                        <i data-lucide="layers" class="w-4 h-4"></i>
+                    </span>
+                    <h2 class="text-sm font-bold text-slate-700 uppercase tracking-wider">Pilih Tab Pakej untuk Diisi (Data Sementara Tersimpan Automatik)</h2>
+                </div>
+                <button onclick="resetCurrentPackage()" class="no-print inline-flex items-center gap-1.5 text-xs font-medium text-rose-600 hover:text-rose-700 px-2.5 py-1 rounded-lg hover:bg-rose-50 transition cursor-pointer self-start sm:self-auto">
+                    <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+                    <span>Kosongkan Pakej Ini</span>
+                </button>
+            </div>
+
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-3" id="package-tabs">
+                <!-- Pakej 3H2M -->
+                <button type="button" onclick="switchPackage('3d2n')" id="btn-pkg-3d2n"
+                    class="pkg-btn text-left p-3.5 rounded-xl border-2 border-indigo-600 bg-indigo-50/70 transition flex flex-col justify-between cursor-pointer">
+                    <div class="flex items-center justify-between w-full">
+                        <span class="font-bold text-slate-900 text-sm sm:text-base">3 Hari 2 Malam</span>
+                        <span id="status-3d2n" class="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-indigo-600 text-white">Aktif</span>
+                    </div>
+                    <span id="mini-3d2n" class="text-xs text-slate-600 mt-1.5 font-medium">Bersih: RM 0.00</span>
+                </button>
+
+                <!-- Pakej 2H1M -->
+                <button type="button" onclick="switchPackage('2d1n')" id="btn-pkg-2d1n"
+                    class="pkg-btn text-left p-3.5 rounded-xl border border-slate-200 hover:border-indigo-400 hover:bg-slate-50 transition flex flex-col justify-between cursor-pointer">
+                    <div class="flex items-center justify-between w-full">
+                        <span class="font-bold text-slate-800 text-sm sm:text-base">2 Hari 1 Malam</span>
+                        <span id="status-2d1n" class="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">Simpan</span>
+                    </div>
+                    <span id="mini-2d1n" class="text-xs text-slate-500 mt-1.5 font-medium">Bersih: RM 0.00</span>
+                </button>
+
+                <!-- Pakej 1 Hari -->
+                <button type="button" onclick="switchPackage('1d')" id="btn-pkg-1d"
+                    class="pkg-btn text-left p-3.5 rounded-xl border border-slate-200 hover:border-indigo-400 hover:bg-slate-50 transition flex flex-col justify-between cursor-pointer">
+                    <div class="flex items-center justify-between w-full">
+                        <span class="font-bold text-slate-800 text-sm sm:text-base">Bengkel 1 Hari</span>
+                        <span id="status-1d" class="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">Simpan</span>
+                    </div>
+                    <span id="mini-1d" class="text-xs text-slate-500 mt-1.5 font-medium">Bersih: RM 0.00</span>
+                </button>
+
+                <!-- Pakej Online -->
+                <button type="button" onclick="switchPackage('online')" id="btn-pkg-online"
+                    class="pkg-btn text-left p-3.5 rounded-xl border border-slate-200 hover:border-indigo-400 hover:bg-slate-50 transition flex flex-col justify-between cursor-pointer">
+                    <div class="flex items-center justify-between w-full">
+                        <span class="font-bold text-slate-800 text-sm sm:text-base">Bengkel Online</span>
+                        <span id="status-online" class="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">Simpan</span>
+                    </div>
+                    <span id="mini-online" class="text-xs text-slate-500 mt-1.5 font-medium">Bersih: RM 0.00</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- Grid Utama: Bahagian 1 (Pendapatan), Bahagian 2 (Perbelanjaan) & Ringkasan Pakej Aktif -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start no-print">
+
+            <!-- Lajur Kiri (7/12): Bahagian 1 & Bahagian 2 -->
+            <div class="lg:col-span-7 space-y-6">
+
+                <!-- BAHAGIAN 1: SUMBER PENDAPATAN -->
+                <section class="bg-white rounded-2xl shadow-sm border border-slate-200/80 overflow-hidden print-shadow-none">
+                    <div class="bg-emerald-50/80 border-b border-emerald-100 px-5 py-4 flex items-center justify-between">
+                        <div class="flex items-center gap-2.5">
+                            <div class="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-bold text-sm shadow-sm">
+                                1
+                            </div>
+                            <div>
+                                <h2 class="font-bold text-slate-900 text-base sm:text-lg">Bahagian 1: Sumber Pendapatan</h2>
+                                <p class="text-xs text-slate-600">Kutipan yuran peserta & penajaan luar bagi pakej ini</p>
+                            </div>
+                        </div>
+                        <span id="badge-total-income" class="text-sm sm:text-base font-bold text-emerald-700 bg-emerald-100 px-3 py-1 rounded-xl">
+                            RM 0.00
+                        </span>
+                    </div>
+
+                    <div class="p-5 space-y-6">
+                        <!-- 1A. Yuran Peserta -->
+                        <div class="bg-slate-50/70 rounded-xl p-4 border border-slate-200/70">
+                            <h3 class="text-sm font-bold text-slate-800 mb-3 flex items-center gap-2">
+                                <i data-lucide="users" class="w-4 h-4 text-emerald-600"></i>
+                                <span>A. Kutipan Yuran Peserta</span>
+                            </h3>
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 items-end">
+                                <div>
+                                    <label class="block text-xs font-medium text-slate-600 mb-1">Bilangan Peserta (Pax)</label>
+                                    <input type="number" id="participant-count" min="0" value="0" oninput="calculateAll()"
+                                        class="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-sm font-semibold text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium text-slate-600 mb-1">Kadar Yuran / Peserta (RM)</label>
+                                    <input type="number" id="participant-fee" min="0" step="10" value="0" oninput="calculateAll()"
+                                        class="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-sm font-semibold text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none">
+                                </div>
+                                <div class="bg-white px-3.5 py-2 rounded-xl border border-slate-200 flex flex-col justify-center">
+                                    <span class="text-[11px] text-slate-500 font-medium">Jumlah Yuran Peserta</span>
+                                    <span id="subtotal-fees" class="text-sm sm:text-base font-bold text-emerald-700">RM 0.00</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 1B. Penajaan / Sumbangan (Dinamik & Diselaraskan Nama Organisasi) -->
+                        <div>
+                            <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+                                <div>
+                                    <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+                                        <i data-lucide="hand-heart" class="w-4 h-4 text-emerald-600"></i>
+                                        <span>B. Penajaan / Sumbangan Organisasi</span>
+                                    </h3>
+                                    <p class="text-[11px] text-slate-500 mt-0.5">Nama organisasi akan diselaraskan ke pakej lain secara automatik</p>
+                                </div>
+                                <button type="button" onclick="addSponsorRow()"
+                                    class="no-print inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-xl shadow-sm transition cursor-pointer">
+                                    <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+                                    <span>Tambah Penaja</span>
+                                </button>
+                            </div>
+
+                            <!-- Header Jadual Penaja -->
+                            <div class="hidden sm:grid sm:grid-cols-12 gap-2 px-2 pb-1.5 text-xs font-semibold text-slate-500">
+                                <div class="col-span-7">Nama Organisasi / Penyumbang</div>
+                                <div class="col-span-4 text-right">Jumlah Sumbangan (RM)</div>
+                                <div class="col-span-1 text-center">Padam</div>
+                            </div>
+
+                            <!-- Senarai Baris Penaja -->
+                            <div id="sponsors-container" class="space-y-2.5"></div>
+
+                            <!-- Empty State Penaja -->
+                            <div id="sponsors-empty" class="hidden text-center py-5 px-4 border border-dashed border-slate-300 rounded-xl text-xs text-slate-500">
+                                Tiada rekod penajaan atau sumbangan buat masa ini. Klik <strong>"+ Tambah Penaja"</strong> untuk menambah.
+                            </div>
+
+                            <div class="mt-3 pt-3 border-t border-slate-100 flex justify-between items-center text-xs sm:text-sm">
+                                <span class="font-medium text-slate-600">Jumlah Penajaan & Sumbangan:</span>
+                                <span id="subtotal-sponsors" class="font-bold text-emerald-700">RM 0.00</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- BAHAGIAN 2: PERBELANJAAN -->
+                <section class="bg-white rounded-2xl shadow-sm border border-slate-200/80 overflow-hidden print-shadow-none">
+                    <div class="bg-rose-50/80 border-b border-rose-100 px-5 py-4 flex items-center justify-between">
+                        <div class="flex items-center gap-2.5">
+                            <div class="w-8 h-8 rounded-xl bg-rose-600 text-white flex items-center justify-center font-bold text-sm shadow-sm">
+                                2
+                            </div>
+                            <div>
+                                <h2 class="font-bold text-slate-900 text-base sm:text-lg">Bahagian 2: Perbelanjaan</h2>
+                                <p class="text-xs text-slate-600">Butiran item diselaraskan ke pakej lain (kos seunit diisi berasingan)</p>
+                            </div>
+                        </div>
+                        <span id="badge-total-expense" class="text-sm sm:text-base font-bold text-rose-700 bg-rose-100 px-3 py-1 rounded-xl">
+                            RM 0.00
+                        </span>
+                    </div>
+
+                    <div class="p-5">
+                        <!-- Butang Tambah Cepat Item Lazim -->
+                        <div class="mb-4 no-print">
+                            <span class="block text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-2">Tambah Pantas Item Perbelanjaan:</span>
+                            <div class="flex flex-wrap gap-1.5">
+                                <button type="button" onclick="addExpenseRow('Caj Penginapan Peserta', 1, '')" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-medium transition cursor-pointer">+ Penginapan</button>
+                                <button type="button" onclick="addExpenseRow('Sewa Dewan & PA Sistem', 1, '')" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-medium transition cursor-pointer">+ Sewa Dewan</button>
+                                <button type="button" onclick="addExpenseRow('Bayaran Penceramah / Trainer', 1, '')" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-medium transition cursor-pointer">+ Penceramah</button>
+                                <button type="button" onclick="addExpenseRow('Elaun Fasilitator', 1, '')" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-medium transition cursor-pointer">+ Fasilitator</button>
+                                <button type="button" onclick="addExpenseRow('Makan & Minum (Katering)', 1, '')" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-medium transition cursor-pointer">+ Katering</button>
+                                <button type="button" onclick="addExpenseRow('Pembelian Banting & Backdrop', 1, '')" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-medium transition cursor-pointer">+ Banting</button>
+                                <button type="button" onclick="addExpenseRow('Cenderamata & Sijil', 1, '')" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-medium transition cursor-pointer">+ Cenderamata</button>
+                            </div>
+                        </div>
+
+                        <!-- Header Jadual Perbelanjaan -->
+                        <div class="hidden sm:grid sm:grid-cols-12 gap-2 px-2 pb-1.5 text-xs font-semibold text-slate-500">
+                            <div class="col-span-5">Butiran Perbelanjaan</div>
+                            <div class="col-span-2 text-center">Kuantiti</div>
+                            <div class="col-span-2 text-right">Kos Seunit (RM)</div>
+                            <div class="col-span-2 text-right">Jumlah (RM)</div>
+                            <div class="col-span-1 text-center">Padam</div>
+                        </div>
+
+                        <!-- Senarai Baris Perbelanjaan -->
+                        <div id="expenses-container" class="space-y-2.5"></div>
+
+                        <!-- Empty State Perbelanjaan -->
+                        <div id="expenses-empty" class="hidden text-center py-6 px-4 border border-dashed border-slate-300 rounded-xl text-xs text-slate-500">
+                            Senarai perbelanjaan kosong. Klik butang <strong>"+ Tambah Item Perbelanjaan"</strong> di bawah.
+                        </div>
+
+                        <!-- Butang Tambah Manual -->
+                        <div class="mt-4 flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-slate-100">
+                            <button type="button" onclick="addExpenseRow('', 1, '')"
+                                class="no-print inline-flex items-center gap-1.5 px-3.5 py-2 bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold rounded-xl shadow-sm transition cursor-pointer">
+                                <i data-lucide="plus-circle" class="w-4 h-4"></i>
+                                <span>Tambah Item Perbelanjaan</span>
+                            </button>
+
+                            <div class="text-sm font-bold text-slate-800 ml-auto">
+                                Jumlah Perbelanjaan: <span id="footer-total-expense" class="text-rose-600 ml-1">RM 0.00</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Lajur Kanan (5/12): Ringkasan Kewangan Pakej Semasa -->
+            <div class="lg:col-span-5 space-y-6 lg:sticky lg:top-6">
+
+                <!-- Kad Status Untung / Rugi Pakej Aktif -->
+                <section id="profit-card" class="bg-white rounded-2xl shadow-sm border border-slate-200/80 overflow-hidden print-shadow-none">
+                    <div id="profit-banner" class="bg-emerald-600 text-white px-5 py-5 transition-colors duration-300">
+                        <div class="flex items-center justify-between">
+                            <span id="profit-status-label" class="text-xs font-bold uppercase tracking-wider bg-white/20 px-2.5 py-1 rounded-full">
+                                Lebihan / Keuntungan Pakej
+                            </span>
+                            <i id="profit-status-icon" data-lucide="trending-up" class="w-5 h-5 text-white"></i>
+                        </div>
+                        <div class="mt-3">
+                            <div id="net-balance" class="text-3xl sm:text-4xl font-extrabold tracking-tight">RM 0.00</div>
+                            <p id="profit-margin-text" class="text-xs text-white/90 mt-1">Margin keuntungan: 0.0% daripada jumlah pendapatan</p>
+                        </div>
+                    </div>
+
+                    <div class="p-5 space-y-4">
+                        <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider">Pecahan Kewangan Pakej Ini</h3>
+
+                        <div class="space-y-2.5 text-sm">
+                            <div class="flex justify-between items-center py-1.5 border-b border-slate-100">
+                                <span class="text-slate-600 flex items-center gap-2">
+                                    <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                                    Yuran Peserta (<span id="summary-pax-count">0</span> pax)
+                                </span>
+                                <span id="summary-fees" class="font-semibold text-slate-800">RM 0.00</span>
+                            </div>
+                            <div class="flex justify-between items-center py-1.5 border-b border-slate-100">
+                                <span class="text-slate-600 flex items-center gap-2">
+                                    <span class="w-2 h-2 rounded-full bg-teal-500"></span>
+                                    Penajaan & Sumbangan
+                                </span>
+                                <span id="summary-sponsors" class="font-semibold text-slate-800">RM 0.00</span>
+                            </div>
+                            <div class="flex justify-between items-center py-2 px-3 bg-emerald-50/70 rounded-xl font-bold text-emerald-900">
+                                <span>JUMLAH PENDAPATAN (A)</span>
+                                <span id="summary-total-income">RM 0.00</span>
+                            </div>
+
+                            <div class="flex justify-between items-center py-2 px-3 bg-rose-50/70 rounded-xl font-bold text-rose-900 mt-2">
+                                <span>JUMLAH PERBELANJAAN (B)</span>
+                                <span id="summary-total-expense">RM 0.00</span>
+                            </div>
+                        </div>
+
+                        <!-- Bar Perbandingan Visual -->
+                        <div class="pt-2">
+                            <div class="flex justify-between text-xs font-medium text-slate-500 mb-1.5">
+                                <span>Nisbah Perbelanjaan vs Pendapatan</span>
+                                <span id="expense-ratio-label">0%</span>
+                            </div>
+                            <div class="w-full h-3 bg-slate-100 rounded-full overflow-hidden flex">
+                                <div id="bar-expense" class="bg-rose-500 h-full transition-all duration-300" style="width: 0%"></div>
+                                <div id="bar-profit" class="bg-emerald-500 h-full transition-all duration-300" style="width: 0%"></div>
+                            </div>
+                            <div class="flex items-center gap-4 mt-2 text-[11px] text-slate-500">
+                                <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-rose-500"></span> Kos Perbelanjaan</span>
+                                <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-emerald-500"></span> Baki Lebihan</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Kad Metrik Analisis Pantas -->
+                <section class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200/80 space-y-4 print-shadow-none">
+                    <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+                        <i data-lucide="bar-chart-3" class="w-4 h-4 text-indigo-600"></i>
+                        <span>Indikator Kelayakan Pakej Ini</span>
+                    </h3>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200/70">
+                            <span class="block text-[11px] font-medium text-slate-500">Kos Sebenar / Peserta</span>
+                            <span id="metric-cost-per-pax" class="text-base sm:text-lg font-bold text-slate-800 mt-0.5 block">RM 0.00</span>
+                        </div>
+                        <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200/70">
+                            <span class="block text-[11px] font-medium text-slate-500">Titik Pulang Modal</span>
+                            <span id="metric-breakeven" class="text-base sm:text-lg font-bold text-indigo-700 mt-0.5 block">0 Peserta</span>
+                        </div>
+                    </div>
+
+                    <div id="advice-box" class="p-3.5 rounded-xl bg-indigo-50/70 border border-indigo-100 text-xs text-indigo-950 leading-relaxed">
+                        Sila masukkan maklumat peserta, yuran, dan perbelanjaan untuk melihat analisis pakej ini.
+                    </div>
+                </section>
+
+            </div>
+        </div>
+
+        <!-- BAHAGIAN 3: JADUAL ANALISIS PERBANDINGAN ANTARA SEMUA PAKEJ -->
+        <section class="bg-white rounded-2xl shadow-sm border border-slate-200/80 overflow-hidden print-shadow-none">
+            <div class="bg-slate-900 text-white px-5 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2 print-header-clean">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-xl bg-indigo-500 text-white flex items-center justify-center shadow-sm no-print">
+                        <i data-lucide="scale" class="w-4 h-4"></i>
+                    </div>
+                    <div>
+                        <h2 class="font-bold text-base sm:text-lg">Analisis Perbandingan Antara Pakej</h2>
+                        <p class="text-xs text-slate-300">Perbandingan automatik semua pakej yang telah diisi dalam sesi ini</p>
+                    </div>
+                </div>
+                <div id="best-package-pill" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 text-xs font-semibold print-badge-clean">
+                    <i data-lucide="award" class="w-4 h-4"></i>
+                    <span id="best-package-text">Pakej Terbaik: Belum ditentukan</span>
+                </div>
+            </div>
+
+            <div class="overflow-x-auto print-overflow-visible">
+                <table class="w-full text-left border-collapse print-table-fit">
+                    <thead>
+                        <tr class="bg-slate-50 border-b border-slate-200 text-xs font-bold text-slate-600 uppercase tracking-wider">
+                            <th class="py-3.5 px-4">Nama Pakej</th>
+                            <th class="py-3.5 px-3 text-center">Peserta</th>
+                            <th class="py-3.5 px-3 text-right">Yuran (RM)</th>
+                            <th class="py-3.5 px-3 text-right">Penajaan (RM)</th>
+                            <th class="py-3.5 px-3 text-right">Jumlah Pendapatan</th>
+                            <th class="py-3.5 px-3 text-right">Jumlah Perbelanjaan</th>
+                            <th class="py-3.5 px-3 text-right">Lebihan / Defisit</th>
+                            <th class="py-3.5 px-3 text-center">Margin</th>
+                            <th class="py-3.5 px-4 text-center">Pulang Modal</th>
+                        </tr>
+                    </thead>
+                    <tbody id="comparison-table-body" class="divide-y divide-slate-100 text-sm">
+                        <!-- Diisi secara automatik melalui JS -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Rumusan Perbandingan -->
+            <div class="bg-slate-50/80 border-t border-slate-200/80 px-5 py-3.5 text-xs text-slate-600 flex flex-col sm:flex-row sm:items-center justify-between gap-2 no-print">
+                <span>* Klik pada mana-mana baris pakej dalam jadual di atas untuk menyunting butirannya.</span>
+                <span class="font-medium text-slate-700">Nota: Data disimpan dalam memori pelayar sementara tab ini dibuka.</span>
+            </div>
+        </section>
+
+        <!-- LAPORAN TERPERINCI SETIAP PAKEJ (KHUSUS UNTUK CETAKAN / PDF) -->
+        <section id="print-all-packages-section" class="hidden print:block space-y-5 print-start-new-page">
+            <div class="border-b border-slate-300 pb-2 mb-3">
+                <h2 class="text-lg font-bold text-slate-900 uppercase tracking-wide">Perincian Kewangan Mengikut Pakej</h2>
+                <p class="text-xs text-slate-600">Pecahan lengkap sumber pendapatan dan butiran perbelanjaan bagi setiap pakej bengkel.</p>
+            </div>
+            <div id="print-packages-container" class="space-y-5">
+                <!-- Diisi secara automatik melalui JS -->
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        // Simpanan sementara (In-Memory State) bagi semua pakej bengkel
+        const packagesState = {
+            '3d2n': {
+                id: '3d2n',
+                label: 'Pakej 3 Hari 2 Malam',
+                shortLabel: '3 Hari 2 Malam',
+                participants: 0,
+                fee: 0,
+                sponsors: [],
+                expenses: []
+            },
+            '2d1n': {
+                id: '2d1n',
+                label: 'Pakej 2 Hari 1 Malam',
+                shortLabel: '2 Hari 1 Malam',
+                participants: 0,
+                fee: 0,
+                sponsors: [],
+                expenses: []
+            },
+            '1d': {
+                id: '1d',
+                label: 'Pakej Bengkel 1 Hari',
+                shortLabel: 'Bengkel 1 Hari',
+                participants: 0,
+                fee: 0,
+                sponsors: [],
+                expenses: []
+            },
+            'online': {
+                id: 'online',
+                label: 'Pakej Bengkel Online',
+                shortLabel: 'Bengkel Online',
+                participants: 0,
+                fee: 0,
+                sponsors: [],
+                expenses: []
+            }
+        };
+
+        let activePackageId = '3d2n';
+
+        // Format mata wang Ringgit Malaysia (RM)
+        function formatRM(value) {
+            const num = parseFloat(value) || 0;
+            return 'RM ' + num.toLocaleString('en-MY', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+        }
+
+        // Papar notifikasi toast ringkas
+        function showToast(message) {
+            const box = document.getElementById('toast-box');
+            const msgEl = document.getElementById('toast-message');
+            if (!box || !msgEl) return;
+            msgEl.textContent = message;
+            box.classList.remove('translate-y-20', 'opacity-0');
+            box.classList.add('translate-y-0', 'opacity-100');
+            setTimeout(() => {
+                box.classList.remove('translate-y-0', 'opacity-100');
+                box.classList.add('translate-y-20', 'opacity-0');
+            }, 2600);
+        }
+
+        // Jana ID unik untuk penyelarasan antara pakej
+        function generateSyncId(prefix) {
+            return prefix + '_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7);
+        }
+
+        // Simpan data daripada borang ke memori pakej semasa
+        function saveCurrentStateToMemory() {
+            const pkg = packagesState[activePackageId];
+            if (!pkg) return;
+
+            pkg.participants = parseFloat(document.getElementById('participant-count').value) || 0;
+            pkg.fee = parseFloat(document.getElementById('participant-fee').value) || 0;
+
+            const sponsorRows = document.querySelectorAll('#sponsors-container .sponsor-row');
+            pkg.sponsors = Array.from(sponsorRows).map(row => ({
+                syncId: row.dataset.syncId || generateSyncId('sp'),
+                org: row.querySelector('.sponsor-org').value,
+                amount: row.querySelector('.sponsor-amount').value
+            }));
+
+            const expenseRows = document.querySelectorAll('#expenses-container .expense-row');
+            pkg.expenses = Array.from(expenseRows).map(row => ({
+                syncId: row.dataset.syncId || generateSyncId('ex'),
+                item: row.querySelector('.expense-item').value,
+                qty: parseFloat(row.querySelector('.expense-qty').value) || 0,
+                unitCost: row.querySelector('.expense-cost').value
+            }));
+        }
+
+        // Tukar tab pakej tanpa memadamkan rekod pakej lain
+        function switchPackage(pkgId) {
+            if (!packagesState[pkgId]) return;
+            if (document.getElementById('sponsors-container').children.length > 0 ||
+                document.getElementById('expenses-container').children.length > 0 ||
+                document.getElementById('participant-count').value !== '0' ||
+                document.getElementById('participant-fee').value !== '0') {
+                saveCurrentStateToMemory();
+            }
+
+            activePackageId = pkgId;
+            const pkg = packagesState[pkgId];
+
+            document.getElementById('active-package-label').textContent = pkg.label;
+            document.getElementById('participant-count').value = pkg.participants;
+            document.getElementById('participant-fee').value = pkg.fee;
+
+            // Render semula baris penaja
+            const sponsorsContainer = document.getElementById('sponsors-container');
+            sponsorsContainer.innerHTML = '';
+            pkg.sponsors.forEach(sp => {
+                renderSponsorRow(sp.org, sp.amount, sp.syncId);
+            });
+
+            // Render semula baris perbelanjaan
+            const expensesContainer = document.getElementById('expenses-container');
+            expensesContainer.innerHTML = '';
+            pkg.expenses.forEach(ex => {
+                renderExpenseRow(ex.item, ex.qty, ex.unitCost, ex.syncId);
+            });
+
+            // Kemas kini gaya butang tab aktif
+            Object.keys(packagesState).forEach(id => {
+                const btn = document.getElementById(`btn-pkg-${id}`);
+                const badge = document.getElementById(`status-${id}`);
+                if (id === pkgId) {
+                    btn.className = 'pkg-btn text-left p-3.5 rounded-xl border-2 border-indigo-600 bg-indigo-50/70 transition flex flex-col justify-between cursor-pointer';
+                    badge.className = 'text-[11px] font-semibold px-2 py-0.5 rounded-full bg-indigo-600 text-white';
+                    badge.textContent = 'Aktif';
+                } else {
+                    btn.className = 'pkg-btn text-left p-3.5 rounded-xl border border-slate-200 hover:border-indigo-400 hover:bg-slate-50 transition flex flex-col justify-between cursor-pointer';
+                    badge.className = 'text-[11px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600';
+                    badge.textContent = 'Simpan';
+                }
+            });
+
+            toggleEmptyStates();
+            lucide.createIcons();
+            calculateAll();
+        }
+
+        // Kosongkan pakej aktif sahaja
+        function resetCurrentPackage() {
+            const pkg = packagesState[activePackageId];
+            pkg.participants = 0;
+            pkg.fee = 0;
+            pkg.sponsors = pkg.sponsors.map(s => ({ ...s, amount: '' }));
+            pkg.expenses = pkg.expenses.map(e => ({ ...e, qty: 1, unitCost: '' }));
+
+            document.getElementById('participant-count').value = 0;
+            document.getElementById('participant-fee').value = 0;
+
+            const sponsorsContainer = document.getElementById('sponsors-container');
+            sponsorsContainer.innerHTML = '';
+            pkg.sponsors.forEach(sp => renderSponsorRow(sp.org, sp.amount, sp.syncId));
+
+            const expensesContainer = document.getElementById('expenses-container');
+            expensesContainer.innerHTML = '';
+            pkg.expenses.forEach(ex => renderExpenseRow(ex.item, ex.qty, ex.unitCost, ex.syncId));
+
+            toggleEmptyStates();
+            lucide.createIcons();
+            calculateAll();
+            showToast(`Data angka bagi ${pkg.shortLabel} telah dikosongkan.`);
+        }
+
+        // Papar atau sembunyi mesej kosong
+        function toggleEmptyStates() {
+            const spCount = document.getElementById('sponsors-container').children.length;
+            document.getElementById('sponsors-empty').classList.toggle('hidden', spCount > 0);
+
+            const exCount = document.getElementById('expenses-container').children.length;
+            document.getElementById('expenses-empty').classList.toggle('hidden', exCount > 0);
+        }
+
+        // Tambah baris penaja baharu & selaraskan ke semua pakej lain
+        function addSponsorRow(orgName = '', amount = '') {
+            const syncId = generateSyncId('sp');
+            renderSponsorRow(orgName, amount, syncId);
+
+            // Selaraskan ke pakej lain (amaun dibiarkan kosong)
+            Object.keys(packagesState).forEach(id => {
+                if (id !== activePackageId) {
+                    packagesState[id].sponsors.push({
+                        syncId: syncId,
+                        org: orgName,
+                        amount: ''
+                    });
+                }
+            });
+
+            toggleEmptyStates();
+            lucide.createIcons();
+            calculateAll();
+        }
+
+        // Bina elemen DOM baris penaja
+        function renderSponsorRow(orgName, amount, syncId) {
+            const container = document.getElementById('sponsors-container');
+            const row = document.createElement('div');
+            row.className = 'sponsor-row grid grid-cols-1 sm:grid-cols-12 gap-2 items-center bg-slate-50/70 sm:bg-transparent p-2.5 sm:p-0 rounded-xl border sm:border-0 border-slate-200';
+            row.dataset.syncId = syncId;
+
+            row.innerHTML = `
+                <div class="sm:col-span-7">
+                    <input type="text" placeholder="Nama Syarikat / Agensi / Individu" value="${orgName}"
+                        oninput="syncSponsorName('${syncId}', this.value); calculateAll()"
+                        class="sponsor-org w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-sm text-slate-800 focus:ring-2 focus:ring-emerald-500 outline-none">
+                </div>
+                <div class="sm:col-span-4">
+                    <input type="number" min="0" step="10" placeholder="0.00" value="${amount}"
+                        oninput="calculateAll()"
+                        class="sponsor-amount w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-sm font-semibold text-right text-slate-800 focus:ring-2 focus:ring-emerald-500 outline-none">
+                </div>
+                <div class="sm:col-span-1 flex justify-end sm:justify-center">
+                    <button type="button" onclick="removeSponsorRow(this, '${syncId}')" title="Padam Penaja"
+                        class="no-print p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition cursor-pointer">
+                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            `;
+            container.appendChild(row);
+        }
+
+        // Selaraskan perubahan nama penaja ke pakej lain
+        function syncSponsorName(syncId, newName) {
+            Object.keys(packagesState).forEach(id => {
+                if (id !== activePackageId) {
+                    const target = packagesState[id].sponsors.find(s => s.syncId === syncId);
+                    if (target) target.org = newName;
+                }
+            });
+        }
+
+        // Padam baris penaja daripada pakej aktif & pakej lain
+        function removeSponsorRow(btn, syncId) {
+            const row = btn.closest('.sponsor-row');
+            if (row) row.remove();
+            Object.keys(packagesState).forEach(id => {
+                packagesState[id].sponsors = packagesState[id].sponsors.filter(s => s.syncId !== syncId);
+            });
+            toggleEmptyStates();
+            calculateAll();
+        }
+
+        // Tambah baris perbelanjaan baharu & selaraskan ke semua pakej lain (kos seunit kosong)
+        function addExpenseRow(itemName = '', qty = 1, unitCost = '') {
+            const syncId = generateSyncId('ex');
+            renderExpenseRow(itemName, qty, unitCost, syncId);
+
+            // Selaraskan butiran item ke pakej lain dengan kos seunit dikosongkan
+            Object.keys(packagesState).forEach(id => {
+                if (id !== activePackageId) {
+                    packagesState[id].expenses.push({
+                        syncId: syncId,
+                        item: itemName,
+                        qty: qty,
+                        unitCost: ''
+                    });
+                }
+            });
+
+            toggleEmptyStates();
+            lucide.createIcons();
+            calculateAll();
+        }
+
+        // Bina elemen DOM baris perbelanjaan
+        function renderExpenseRow(itemName, qty, unitCost, syncId) {
+            const container = document.getElementById('expenses-container');
+            const row = document.createElement('div');
+            row.className = 'expense-row grid grid-cols-1 sm:grid-cols-12 gap-2 items-center bg-slate-50/70 sm:bg-transparent p-2.5 sm:p-0 rounded-xl border sm:border-0 border-slate-200';
+            row.dataset.syncId = syncId;
+
+            const rowTotal = (parseFloat(qty) || 0) * (parseFloat(unitCost) || 0);
+
+            row.innerHTML = `
+                <div class="sm:col-span-5">
+                    <input type="text" placeholder="Contoh: Sewa Dewan / Penceramah" value="${itemName}"
+                        oninput="syncExpenseItemName('${syncId}', this.value); calculateAll()"
+                        class="expense-item w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-sm text-slate-800 focus:ring-2 focus:ring-rose-500 outline-none">
+                </div>
+                <div class="sm:col-span-2">
+                    <input type="number" min="0" step="1" value="${qty}"
+                        oninput="calculateAll()"
+                        class="expense-qty w-full px-2.5 py-2 bg-white border border-slate-300 rounded-xl text-sm text-center font-medium text-slate-800 focus:ring-2 focus:ring-rose-500 outline-none">
+                </div>
+                <div class="sm:col-span-2">
+                    <input type="number" min="0" step="1" placeholder="0.00" value="${unitCost}"
+                        oninput="calculateAll()"
+                        class="expense-cost w-full px-2.5 py-2 bg-white border border-slate-300 rounded-xl text-sm text-right font-semibold text-slate-800 focus:ring-2 focus:ring-rose-500 outline-none">
+                </div>
+                <div class="sm:col-span-2 text-right px-1">
+                    <span class="expense-row-total text-xs sm:text-sm font-bold text-slate-700">${formatRM(rowTotal)}</span>
+                </div>
+                <div class="sm:col-span-1 flex justify-end sm:justify-center">
+                    <button type="button" onclick="removeExpenseRow(this, '${syncId}')" title="Padam Item"
+                        class="no-print p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition cursor-pointer">
+                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            `;
+            container.appendChild(row);
+        }
+
+        // Selaraskan nama butiran perbelanjaan ke pakej lain
+        function syncExpenseItemName(syncId, newItemName) {
+            Object.keys(packagesState).forEach(id => {
+                if (id !== activePackageId) {
+                    const target = packagesState[id].expenses.find(e => e.syncId === syncId);
+                    if (target) target.item = newItemName;
+                }
+            });
+        }
+
+        // Padam baris perbelanjaan daripada pakej aktif & pakej lain
+        function removeExpenseRow(btn, syncId) {
+            const row = btn.closest('.expense-row');
+            if (row) row.remove();
+            Object.keys(packagesState).forEach(id => {
+                packagesState[id].expenses = packagesState[id].expenses.filter(e => e.syncId !== syncId);
+            });
+            toggleEmptyStates();
+            calculateAll();
+        }
+
+        // Kira keseluruhan pendapatan, perbelanjaan, keuntungan, dan kemas kini jadual perbandingan
+        function calculateAll() {
+            const pax = parseFloat(document.getElementById('participant-count').value) || 0;
+            const fee = parseFloat(document.getElementById('participant-fee').value) || 0;
+            const totalFees = pax * fee;
+
+            let totalSponsors = 0;
+            document.querySelectorAll('#sponsors-container .sponsor-row').forEach(row => {
+                const amt = parseFloat(row.querySelector('.sponsor-amount').value) || 0;
+                totalSponsors += amt;
+            });
+
+            const totalIncome = totalFees + totalSponsors;
+
+            let totalExpenses = 0;
+            document.querySelectorAll('#expenses-container .expense-row').forEach(row => {
+                const qty = parseFloat(row.querySelector('.expense-qty').value) || 0;
+                const cost = parseFloat(row.querySelector('.expense-cost').value) || 0;
+                const rowSum = qty * cost;
+                row.querySelector('.expense-row-total').textContent = formatRM(rowSum);
+                totalExpenses += rowSum;
+            });
+
+            const netBalance = totalIncome - totalExpenses;
+            const profitMargin = totalIncome > 0 ? ((netBalance / totalIncome) * 100) : 0;
+            const costPerPax = pax > 0 ? (totalExpenses / pax) : 0;
+
+            // Titik pulang modal (Break-even participants)
+            let breakEvenPax = 0;
+            if (fee > 0) {
+                const netExpenseAfterSponsor = Math.max(0, totalExpenses - totalSponsors);
+                breakEvenPax = Math.ceil(netExpenseAfterSponsor / fee);
+            }
+
+            // Kemas kini paparan Bahagian 1 & 2
+            document.getElementById('subtotal-fees').textContent = formatRM(totalFees);
+            document.getElementById('subtotal-sponsors').textContent = formatRM(totalSponsors);
+            document.getElementById('badge-total-income').textContent = formatRM(totalIncome);
+
+            document.getElementById('badge-total-expense').textContent = formatRM(totalExpenses);
+            document.getElementById('footer-total-expense').textContent = formatRM(totalExpenses);
+
+            // Kemas kini Kad Ringkasan Kewangan
+            document.getElementById('summary-pax-count').textContent = pax;
+            document.getElementById('summary-fees').textContent = formatRM(totalFees);
+            document.getElementById('summary-sponsors').textContent = formatRM(totalSponsors);
+            document.getElementById('summary-total-income').textContent = formatRM(totalIncome);
+            document.getElementById('summary-total-expense').textContent = formatRM(totalExpenses);
+            document.getElementById('net-balance').textContent = formatRM(netBalance);
+
+            const banner = document.getElementById('profit-banner');
+            const statusLabel = document.getElementById('profit-status-label');
+            const marginText = document.getElementById('profit-margin-text');
+
+            if (netBalance >= 0) {
+                banner.className = 'bg-emerald-600 text-white px-5 py-5 transition-colors duration-300';
+                statusLabel.textContent = 'Lebihan / Keuntungan Pakej';
+                marginText.textContent = `Margin keuntungan: ${profitMargin.toFixed(1)}% daripada jumlah pendapatan`;
+            } else {
+                banner.className = 'bg-rose-600 text-white px-5 py-5 transition-colors duration-300';
+                statusLabel.textContent = 'Defisit / Kekurangan Dana';
+                marginText.textContent = `Defisit sebanyak ${Math.abs(profitMargin).toFixed(1)}% berbanding jumlah pendapatan`;
+            }
+
+            // Bar nisbah visual
+            const expenseRatio = totalIncome > 0 ? Math.min(100, Math.round((totalExpenses / totalIncome) * 100)) : (totalExpenses > 0 ? 100 : 0);
+            const profitRatio = totalIncome > 0 && netBalance > 0 ? Math.max(0, 100 - expenseRatio) : 0;
+
+            document.getElementById('expense-ratio-label').textContent = `${expenseRatio}%`;
+            document.getElementById('bar-expense').style.width = `${expenseRatio}%`;
+            document.getElementById('bar-profit').style.width = `${profitRatio}%`;
+
+            // Metrik kelayakan
+            document.getElementById('metric-cost-per-pax').textContent = formatRM(costPerPax);
+            document.getElementById('metric-breakeven').textContent = fee > 0 ? `${breakEvenPax} Peserta` : 'Tetapkan Yuran';
+
+            const adviceBox = document.getElementById('advice-box');
+            if (totalIncome === 0 && totalExpenses === 0) {
+                adviceBox.textContent = 'Sila masukkan bilangan peserta, kadar yuran, dan kos perbelanjaan untuk melihat analisis kelayakan pakej ini.';
+            } else if (netBalance > 0) {
+                adviceBox.innerHTML = `<strong>Berdaya Maju:</strong> Pakej ini menjana lebihan bersih <strong>${formatRM(netBalance)}</strong>. Anda hanya memerlukan minimum <strong>${breakEvenPax} peserta</strong> untuk mencapai titik pulang modal.`;
+            } else if (netBalance === 0) {
+                adviceBox.innerHTML = `<strong>Pulang Modal (Break-Even):</strong> Pendapatan menyamai kos perbelanjaan. Tambah bilangan peserta atau kurangkan kos seunit untuk menjana lebihan.`;
+            } else {
+                adviceBox.innerHTML = `<strong>Perhatian (Defisit):</strong> Perbelanjaan melebihi pendapatan sebanyak <strong>${formatRM(Math.abs(netBalance))}</strong>. Anda memerlukan sekurang-kurangnya <strong>${breakEvenPax} peserta</strong> (pada yuran ${formatRM(fee)}) atau tambahan penajaan untuk menampung kos.`;
+            }
+
+            saveCurrentStateToMemory();
+            updateComparisonTable();
+        }
+
+        // Kemas kini jadual analisis perbandingan antara semua pakej
+        function updateComparisonTable() {
+            const tbody = document.getElementById('comparison-table-body');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+
+            let bestPkg = null;
+            let highestNet = -Infinity;
+
+            Object.values(packagesState).forEach(pkg => {
+                const fees = pkg.participants * pkg.fee;
+                const sponsors = pkg.sponsors.reduce((sum, s) => sum + (parseFloat(s.amount) || 0), 0);
+                const income = fees + sponsors;
+                const expenses = pkg.expenses.reduce((sum, e) => sum + ((e.qty || 0) * (parseFloat(e.unitCost) || 0)), 0);
+                const net = income - expenses;
+                const margin = income > 0 ? ((net / income) * 100).toFixed(1) + '%' : '0.0%';
+
+                let breakEven = '-';
+                if (pkg.fee > 0) {
+                    const netExp = Math.max(0, expenses - sponsors);
+                    breakEven = Math.ceil(netExp / pkg.fee) + ' pax';
+                }
+
+                // Kemas kini label mini pada butang tab
+                const miniEl = document.getElementById(`mini-${pkg.id}`);
+                if (miniEl) {
+                    miniEl.textContent = `Bersih: ${formatRM(net)}`;
+                    miniEl.className = `text-xs mt-1.5 font-semibold ${net > 0 ? 'text-emerald-600' : (net < 0 ? 'text-rose-600' : 'text-slate-500')}`;
+                }
+
+                if ((income > 0 || expenses > 0) && net > highestNet) {
+                    highestNet = net;
+                    bestPkg = pkg;
+                }
+
+                const isCurrent = pkg.id === activePackageId;
+                const tr = document.createElement('tr');
+                tr.onclick = () => switchPackage(pkg.id);
+                tr.className = `cursor-pointer transition ${isCurrent ? 'bg-indigo-50/70 font-medium' : 'hover:bg-slate-50'}`;
+
+                tr.innerHTML = `
+                    <td class="py-3.5 px-4">
+                        <div class="flex items-center gap-2">
+                            <span class="font-bold text-slate-800">${pkg.shortLabel}</span>
+                            ${isCurrent ? '<span class="no-print text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-indigo-600 text-white">Aktif</span>' : ''}
+                        </div>
+                    </td>
+                    <td class="py-3.5 px-3 text-center text-slate-700">${pkg.participants}</td>
+                    <td class="py-3.5 px-3 text-right text-slate-700">${formatRM(fees)}</td>
+                    <td class="py-3.5 px-3 text-right text-slate-700">${formatRM(sponsors)}</td>
+                    <td class="py-3.5 px-3 text-right font-semibold text-emerald-700">${formatRM(income)}</td>
+                    <td class="py-3.5 px-3 text-right font-semibold text-rose-700">${formatRM(expenses)}</td>
+                    <td class="py-3.5 px-3 text-right font-bold ${net >= 0 ? 'text-emerald-600' : 'text-rose-600'}">${formatRM(net)}</td>
+                    <td class="py-3.5 px-3 text-center text-slate-700">${margin}</td>
+                    <td class="py-3.5 px-4 text-center text-slate-700">${breakEven}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            const bestTextEl = document.getElementById('best-package-text');
+            if (bestPkg && highestNet > 0) {
+                bestTextEl.textContent = `Pakej Terbaik: ${bestPkg.shortLabel} (+${formatRM(highestNet)})`;
+            } else if (bestPkg) {
+                bestTextEl.textContent = `Pakej Tertinggi: ${bestPkg.shortLabel} (${formatRM(highestNet)})`;
+            } else {
+                bestTextEl.textContent = 'Pakej Terbaik: Belum ditentukan';
+            }
+
+            renderPrintPackagesReport();
+        }
+
+        // Jana paparan terperinci setiap pakej khusus untuk cetakan / PDF
+        function renderPrintPackagesReport() {
+            const printTitleEl = document.getElementById('print-workshop-title');
+            const printDateEl = document.getElementById('print-date-label');
+            if (printTitleEl) {
+                const titleVal = document.getElementById('workshop-title').value.trim();
+                printTitleEl.textContent = titleVal || 'Cadangan Pakej Bengkel';
+            }
+            if (printDateEl) {
+                printDateEl.textContent = 'Tarikh Cetakan: ' + new Date().toLocaleDateString('ms-MY', {
+                    day: '2-digit', month: 'long', year: 'numeric'
+                });
+            }
+
+            const container = document.getElementById('print-packages-container');
+            if (!container) return;
+            container.innerHTML = '';
+
+            Object.values(packagesState).forEach(pkg => {
+                const fees = pkg.participants * pkg.fee;
+                const sponsorsTotal = pkg.sponsors.reduce((sum, s) => sum + (parseFloat(s.amount) || 0), 0);
+                const income = fees + sponsorsTotal;
+                const expensesTotal = pkg.expenses.reduce((sum, e) => sum + ((e.qty || 0) * (parseFloat(e.unitCost) || 0)), 0);
+                const net = income - expensesTotal;
+
+                const validSponsors = pkg.sponsors.filter(s => (s.org && s.org.trim() !== '') || (parseFloat(s.amount) || 0) > 0);
+                const validExpenses = pkg.expenses.filter(e => (e.item && e.item.trim() !== '') || ((e.qty || 0) * (parseFloat(e.unitCost) || 0)) > 0);
+
+                const sponsorRowsHtml = validSponsors.length > 0
+                    ? validSponsors.map(s => `
+                        <tr class="border-b border-slate-100">
+                            <td class="py-1.5 px-2 text-slate-700">${s.org || 'Penaja Tanpa Nama'}</td>
+                            <td class="py-1.5 px-2 text-right font-medium text-slate-800">${formatRM(s.amount)}</td>
+                        </tr>`).join('')
+                    : `<tr><td colspan="2" class="py-1.5 px-2 text-slate-400 italic">Tiada penajaan / sumbangan direkodkan</td></tr>`;
+
+                const expenseRowsHtml = validExpenses.length > 0
+                    ? validExpenses.map(e => {
+                        const rowSum = (e.qty || 0) * (parseFloat(e.unitCost) || 0);
+                        return `
+                        <tr class="border-b border-slate-100">
+                            <td class="py-1.5 px-2 text-slate-700">${e.item || 'Item Perbelanjaan'}</td>
+                            <td class="py-1.5 px-2 text-center text-slate-700">${e.qty || 0}</td>
+                            <td class="py-1.5 px-2 text-right text-slate-700">${formatRM(e.unitCost)}</td>
+                            <td class="py-1.5 px-2 text-right font-medium text-slate-800">${formatRM(rowSum)}</td>
+                        </tr>`;
+                    }).join('')
+                    : `<tr><td colspan="4" class="py-1.5 px-2 text-slate-400 italic">Tiada item perbelanjaan direkodkan</td></tr>`;
+
+                const card = document.createElement('div');
+                card.className = 'print-page-break border border-slate-300 rounded-xl overflow-hidden bg-white';
+                card.innerHTML = `
+                    <div class="bg-slate-100 px-4 py-2.5 border-b border-slate-300 flex items-center justify-between">
+                        <h3 class="font-bold text-slate-900 text-sm">${pkg.label}</h3>
+                        <span class="text-xs font-bold px-2.5 py-0.5 rounded-full ${net >= 0 ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}">
+                            Baki Bersih: ${formatRM(net)}
+                        </span>
+                    </div>
+                    <div class="p-4 space-y-4 text-xs">
+                        <!-- Bahagian 1: Pendapatan -->
+                        <div>
+                            <h4 class="font-bold text-emerald-800 uppercase mb-1.5">Bahagian 1: Sumber Pendapatan</h4>
+                            <table class="w-full border border-slate-200">
+                                <tbody>
+                                    <tr class="border-b border-slate-200 bg-slate-50/60">
+                                        <td class="py-1.5 px-2 font-medium text-slate-700">Kutipan Yuran Peserta (${pkg.participants} pax × ${formatRM(pkg.fee)})</td>
+                                        <td class="py-1.5 px-2 text-right font-semibold text-slate-900">${formatRM(fees)}</td>
+                                    </tr>
+                                    ${sponsorRowsHtml}
+                                    <tr class="bg-emerald-50 font-bold text-emerald-900">
+                                        <td class="py-1.5 px-2">JUMLAH PENDAPATAN</td>
+                                        <td class="py-1.5 px-2 text-right">${formatRM(income)}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Bahagian 2: Perbelanjaan -->
+                        <div>
+                            <h4 class="font-bold text-rose-800 uppercase mb-1.5">Bahagian 2: Perbelanjaan</h4>
+                            <table class="w-full border border-slate-200">
+                                <thead>
+                                    <tr class="bg-slate-50 border-b border-slate-200 text-slate-600">
+                                        <th class="py-1.5 px-2 text-left">Butiran</th>
+                                        <th class="py-1.5 px-2 text-center w-16">Kuantiti</th>
+                                        <th class="py-1.5 px-2 text-right w-28">Kos Seunit</th>
+                                        <th class="py-1.5 px-2 text-right w-28">Jumlah</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${expenseRowsHtml}
+                                    <tr class="bg-rose-50 font-bold text-rose-900">
+                                        <td colspan="3" class="py-1.5 px-2">JUMLAH PERBELANJAAN</td>
+                                        <td class="py-1.5 px-2 text-right">${formatRM(expensesTotal)}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // Salin ringkasan semua pakej ke papan keratan (Clipboard)
+        function copySummary() {
+            const title = document.getElementById('workshop-title').value.trim() || 'Cadangan Pakej Bengkel';
+            let text = `RINGKASAN PENJANAAN KEWANGAN: ${title.toUpperCase()}\n`;
+            text += `====================================================\n\n`;
+
+            Object.values(packagesState).forEach(pkg => {
+                const fees = pkg.participants * pkg.fee;
+                const sponsors = pkg.sponsors.reduce((sum, s) => sum + (parseFloat(s.amount) || 0), 0);
+                const income = fees + sponsors;
+                const expenses = pkg.expenses.reduce((sum, e) => sum + ((e.qty || 0) * (parseFloat(e.unitCost) || 0)), 0);
+                const net = income - expenses;
+
+                text += `• ${pkg.label}\n`;
+                text += `  - Peserta: ${pkg.participants} pax @ ${formatRM(pkg.fee)} = ${formatRM(fees)}\n`;
+                text += `  - Penajaan/Sumbangan: ${formatRM(sponsors)}\n`;
+                text += `  - Jumlah Pendapatan: ${formatRM(income)}\n`;
+                text += `  - Jumlah Perbelanjaan: ${formatRM(expenses)}\n`;
+                text += `  - Baki Bersih (Untung/Defisit): ${formatRM(net)}\n\n`;
+            });
+
+            const tempTextarea = document.createElement('textarea');
+            tempTextarea.value = text;
+            document.body.appendChild(tempTextarea);
+            tempTextarea.select();
+            try {
+                document.execCommand('copy');
+                showToast('Ringkasan perbandingan pakej berjaya disalin!');
+            } catch (err) {
+                showToast('Gagal menyalin teks.');
+            }
+            document.body.removeChild(tempTextarea);
+        }
+
+        // Mulakan aplikasi apabila halaman siap dimuatkan
+        window.onload = function () {
+            lucide.createIcons();
+            switchPackage('3d2n');
+        };
+    </script>
+</body>
+</html>
