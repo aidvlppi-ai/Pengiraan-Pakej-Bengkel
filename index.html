@@ -93,13 +93,13 @@
                         <i data-lucide="calculator" class="w-3.5 h-3.5"></i>
                         <span>Sistem Perancangan Kewangan & Perbandingan Pakej</span>
                     </div>
-                    <h1 class="text-2xl sm:text-3xl font-bold tracking-tight">Kalkulator Penjanaan Pakej Bengkel</h1>
+                    <h1 class="text-2xl sm:text-3xl font-bold tracking-tight">Pengiraan Penjanaan Pakej Bengkel</h1>
                     <p class="text-indigo-200 text-sm mt-1">Urus maklumat setiap pakej secara berasingan dan bandingkan unjuran keuntungan secara langsung.</p>
                 </div>
                 <div class="flex flex-wrap items-center gap-2.5 no-print">
                     <button onclick="copySummary()" class="inline-flex items-center gap-2 px-4 py-2.5 bg-white/10 hover:bg-white/20 text-white border border-white/20 rounded-xl text-sm font-medium transition cursor-pointer">
                         <i data-lucide="copy" class="w-4 h-4"></i>
-                        <span>Salin Ringkasan (paste di Word)</span>
+                        <span>Salin Ringkasan (boleh paste di Word)</span>
                     </button>
                     <button onclick="window.print()" class="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-sm font-semibold shadow-sm transition cursor-pointer">
                         <i data-lucide="printer" class="w-4 h-4"></i>
@@ -300,6 +300,41 @@
                     </div>
 
                     <div class="p-5">
+                        <!-- Pilihan Hotel / Lokasi Bengkel (Boleh Tambah Beberapa Hotel Secara Manual - Disembunyikan untuk Bengkel Online) -->
+                        <div id="hotel-settings-section" class="mb-5 bg-indigo-50/70 border border-indigo-200/80 rounded-xl p-4">
+                            <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+                                <div>
+                                    <h3 class="text-sm font-bold text-indigo-950 flex items-center gap-2">
+                                        <i data-lucide="building-2" class="w-4 h-4 text-indigo-600"></i>
+                                        <span>Tetapan Pilihan Lokasi / Hotel (Boleh Tambah Manual)</span>
+                                    </h3>
+                                    <p class="text-[11px] text-indigo-700 mt-0.5">Tambah beberapa pilihan hotel untuk melihat perbandingan Jumlah Perbelanjaan (B) & baki bersih bagi setiap hotel</p>
+                                </div>
+                                <button type="button" onclick="addHotelRow()"
+                                    class="no-print inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl shadow-sm transition cursor-pointer">
+                                    <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+                                    <span>Tambah Hotel / Lokasi</span>
+                                </button>
+                            </div>
+
+                            <!-- Header Jadual Hotel -->
+                            <div class="hidden sm:grid sm:grid-cols-12 gap-2 px-1 pb-1.5 text-xs font-semibold text-indigo-900/70">
+                                <div class="col-span-5">Nama Hotel / Lokasi</div>
+                                <div class="col-span-3">Jenis Caj</div>
+                                <div class="col-span-2 text-right">Kadar (RM)</div>
+                                <div class="col-span-1 text-right">Jumlah</div>
+                                <div class="col-span-1 text-center">Padam</div>
+                            </div>
+
+                            <!-- Senarai Baris Hotel -->
+                            <div id="hotels-container" class="space-y-2.5"></div>
+
+                            <!-- Empty State Hotel -->
+                            <div id="hotels-empty" class="text-center py-4 px-3 border border-dashed border-indigo-300 rounded-xl text-xs text-indigo-700/80 bg-white/50">
+                                Tiada pilihan hotel ditambah. Klik <strong>"+ Tambah Hotel / Lokasi"</strong> untuk membandingkan kos mengikut tempat hotel.
+                            </div>
+                        </div>
+
                         <!-- Butang Tambah Cepat Item Lazim -->
                         <div class="mb-4 no-print">
                             <span class="block text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-2">Tambah Pantas Item Perbelanjaan:</span>
@@ -340,7 +375,7 @@
                             </button>
 
                             <div class="text-sm font-bold text-slate-800 ml-auto">
-                                Jumlah Perbelanjaan: <span id="footer-total-expense" class="text-rose-600 ml-1">RM 0.00</span>
+                                Jumlah Perbelanjaan Asas (Tanpa Hotel): <span id="footer-total-expense" class="text-rose-600 ml-1">RM 0.00</span>
                             </div>
                         </div>
                     </div>
@@ -388,9 +423,11 @@
                                 <span id="summary-total-income">RM 0.00</span>
                             </div>
 
-                            <div class="flex justify-between items-center py-2 px-3 bg-rose-50/70 rounded-xl font-bold text-rose-900 mt-2">
-                                <span>JUMLAH PERBELANJAAN (B)</span>
-                                <span id="summary-total-expense">RM 0.00</span>
+                            <div id="summary-expenses-breakdown" class="space-y-2 mt-2">
+                                <div class="flex justify-between items-center py-2 px-3 bg-rose-50/70 rounded-xl font-bold text-rose-900">
+                                    <span>JUMLAH PERBELANJAAN (B)</span>
+                                    <span id="summary-total-expense">RM 0.00</span>
+                                </div>
                             </div>
                         </div>
 
@@ -461,6 +498,7 @@
                     <thead>
                         <tr class="bg-slate-50 border-b border-slate-200 text-xs font-bold text-slate-600 uppercase tracking-wider">
                             <th class="py-3.5 px-4">Nama Pakej</th>
+                            <th class="py-3.5 px-3 text-left">Lokasi / Hotel</th>
                             <th class="py-3.5 px-3 text-center">Peserta</th>
                             <th class="py-3.5 px-3 text-right">Yuran (RM)</th>
                             <th class="py-3.5 px-3 text-right">Penajaan (RM)</th>
@@ -504,6 +542,7 @@
                 id: '3d2n',
                 label: 'Pakej 3 Hari 2 Malam',
                 shortLabel: '3 Hari 2 Malam',
+                hotels: [],
                 participants: 0,
                 fee: 0,
                 sponsors: [],
@@ -513,6 +552,7 @@
                 id: '2d1n',
                 label: 'Pakej 2 Hari 1 Malam',
                 shortLabel: '2 Hari 1 Malam',
+                hotels: [],
                 participants: 0,
                 fee: 0,
                 sponsors: [],
@@ -522,6 +562,7 @@
                 id: '1d',
                 label: 'Pakej Bengkel 1 Hari',
                 shortLabel: 'Bengkel 1 Hari',
+                hotels: [],
                 participants: 0,
                 fee: 0,
                 sponsors: [],
@@ -531,6 +572,7 @@
                 id: 'online',
                 label: 'Pakej Bengkel Online',
                 shortLabel: 'Bengkel Online',
+                hotels: [],
                 participants: 0,
                 fee: 0,
                 sponsors: [],
@@ -568,6 +610,15 @@
             return prefix + '_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7);
         }
 
+        // Kira kos satu hotel berdasarkan jenis caj & bilangan peserta
+        function computeHotelCost(hotel, participants) {
+            const rate = parseFloat(hotel.rateAmount) || 0;
+            if (hotel.rateType === 'per_pax') {
+                return rate * (participants || 0);
+            }
+            return rate;
+        }
+
         // Simpan data daripada borang ke memori pakej semasa
         function saveCurrentStateToMemory() {
             const pkg = packagesState[activePackageId];
@@ -575,6 +626,14 @@
 
             pkg.participants = parseFloat(document.getElementById('participant-count').value) || 0;
             pkg.fee = parseFloat(document.getElementById('participant-fee').value) || 0;
+
+            const hotelRows = document.querySelectorAll('#hotels-container .hotel-row');
+            pkg.hotels = Array.from(hotelRows).map(row => ({
+                syncId: row.dataset.syncId || generateSyncId('ht'),
+                name: row.querySelector('.hotel-name-input').value,
+                rateType: row.querySelector('.hotel-type-select').value,
+                rateAmount: row.querySelector('.hotel-rate-input').value
+            }));
 
             const sponsorRows = document.querySelectorAll('#sponsors-container .sponsor-row');
             pkg.sponsors = Array.from(sponsorRows).map(row => ({
@@ -595,7 +654,8 @@
         // Tukar tab pakej tanpa memadamkan rekod pakej lain
         function switchPackage(pkgId) {
             if (!packagesState[pkgId]) return;
-            if (document.getElementById('sponsors-container').children.length > 0 ||
+            if (document.getElementById('hotels-container').children.length > 0 ||
+                document.getElementById('sponsors-container').children.length > 0 ||
                 document.getElementById('expenses-container').children.length > 0 ||
                 document.getElementById('participant-count').value !== '0' ||
                 document.getElementById('participant-fee').value !== '0') {
@@ -608,6 +668,19 @@
             document.getElementById('active-package-label').textContent = pkg.label;
             document.getElementById('participant-count').value = pkg.participants;
             document.getElementById('participant-fee').value = pkg.fee;
+
+            // Sembunyikan Tetapan Pilihan Lokasi / Hotel jika pakej aktif adalah Bengkel Online
+            const hotelSection = document.getElementById('hotel-settings-section');
+            if (hotelSection) {
+                hotelSection.classList.toggle('hidden', pkgId === 'online');
+            }
+
+            // Render semula baris hotel
+            const hotelsContainer = document.getElementById('hotels-container');
+            hotelsContainer.innerHTML = '';
+            pkg.hotels.forEach(ht => {
+                renderHotelRow(ht.name, ht.rateType, ht.rateAmount, ht.syncId);
+            });
 
             // Render semula baris penaja
             const sponsorsContainer = document.getElementById('sponsors-container');
@@ -648,33 +721,130 @@
             const pkg = packagesState[activePackageId];
             pkg.participants = 0;
             pkg.fee = 0;
+            pkg.hotels = pkg.hotels.map(h => ({ ...h, rateAmount: '' }));
             pkg.sponsors = pkg.sponsors.map(s => ({ ...s, amount: '' }));
             pkg.expenses = pkg.expenses.map(e => ({ ...e, qty: 1, unitCost: '' }));
 
             document.getElementById('participant-count').value = 0;
             document.getElementById('participant-fee').value = 0;
 
+            const hotelsContainer = document.getElementById('hotels-container');
+            hotelsContainer.innerHTML = '';
+            pkg.hotels.forEach(ht => renderHotelRow(ht.name, ht.rateType, '', ht.syncId));
+
             const sponsorsContainer = document.getElementById('sponsors-container');
             sponsorsContainer.innerHTML = '';
-            pkg.sponsors.forEach(sp => renderSponsorRow(sp.org, sp.amount, sp.syncId));
+            pkg.sponsors.forEach(sp => renderSponsorRow(sp.org, '', sp.syncId));
 
             const expensesContainer = document.getElementById('expenses-container');
             expensesContainer.innerHTML = '';
-            pkg.expenses.forEach(ex => renderExpenseRow(ex.item, ex.qty, ex.unitCost, ex.syncId));
+            pkg.expenses.forEach(ex => renderExpenseRow(ex.item, 1, '', ex.syncId));
 
             toggleEmptyStates();
             lucide.createIcons();
             calculateAll();
-            showToast(`Data angka bagi ${pkg.shortLabel} telah dikosongkan.`);
+            showToast(`Data ${pkg.shortLabel} telah dikosongkan.`);
         }
 
-        // Papar atau sembunyi mesej kosong
+        // Papar atau sembunyi mesej kosong pada senarai hotel, penaja dan perbelanjaan
         function toggleEmptyStates() {
-            const spCount = document.getElementById('sponsors-container').children.length;
-            document.getElementById('sponsors-empty').classList.toggle('hidden', spCount > 0);
+            const hotelsContainer = document.getElementById('hotels-container');
+            const hotelsEmpty = document.getElementById('hotels-empty');
+            if (hotelsContainer && hotelsEmpty) {
+                hotelsEmpty.classList.toggle('hidden', hotelsContainer.children.length > 0);
+            }
 
-            const exCount = document.getElementById('expenses-container').children.length;
-            document.getElementById('expenses-empty').classList.toggle('hidden', exCount > 0);
+            const sponsorsContainer = document.getElementById('sponsors-container');
+            const sponsorsEmpty = document.getElementById('sponsors-empty');
+            if (sponsorsContainer && sponsorsEmpty) {
+                sponsorsEmpty.classList.toggle('hidden', sponsorsContainer.children.length > 0);
+            }
+
+            const expensesContainer = document.getElementById('expenses-container');
+            const expensesEmpty = document.getElementById('expenses-empty');
+            if (expensesContainer && expensesEmpty) {
+                expensesEmpty.classList.toggle('hidden', expensesContainer.children.length > 0);
+            }
+        }
+
+        // Tambah baris hotel/lokasi baharu & selaraskan nama hotel ke pakej lain (kadar kosong)
+        function addHotelRow(name = '', rateType = 'per_pax', rateAmount = '') {
+            const syncId = generateSyncId('ht');
+            renderHotelRow(name, rateType, rateAmount, syncId);
+
+            Object.keys(packagesState).forEach(id => {
+                if (id !== activePackageId && id !== 'online') {
+                    packagesState[id].hotels.push({
+                        syncId: syncId,
+                        name: name,
+                        rateType: rateType,
+                        rateAmount: ''
+                    });
+                }
+            });
+
+            toggleEmptyStates();
+            lucide.createIcons();
+            calculateAll();
+        }
+
+        // Bina elemen DOM baris hotel
+        function renderHotelRow(name, rateType, rateAmount, syncId) {
+            const container = document.getElementById('hotels-container');
+            const row = document.createElement('div');
+            row.className = 'hotel-row grid grid-cols-1 sm:grid-cols-12 gap-2 items-center bg-white/90 sm:bg-transparent p-2.5 sm:p-0 rounded-xl border sm:border-0 border-indigo-200';
+            row.dataset.syncId = syncId;
+
+            row.innerHTML = `
+                <div class="sm:col-span-5">
+                    <input type="text" placeholder="Contoh: Hotel Tenera / Resort" value="${name}"
+                        oninput="syncHotelName('${syncId}', this.value); calculateAll()"
+                        class="hotel-name-input w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-sm text-slate-800 focus:ring-2 focus:ring-indigo-500 outline-none">
+                </div>
+                <div class="sm:col-span-3">
+                    <select onchange="calculateAll()"
+                        class="hotel-type-select w-full px-2.5 py-2 bg-white border border-slate-300 rounded-xl text-xs sm:text-sm text-slate-800 focus:ring-2 focus:ring-indigo-500 outline-none">
+                        <option value="per_pax" ${rateType === 'per_pax' ? 'selected' : ''}>Pakej / Pax</option>
+                        <option value="lump_sum" ${rateType === 'lump_sum' ? 'selected' : ''}>Sewa Pukal</option>
+                    </select>
+                </div>
+                <div class="sm:col-span-2">
+                    <input type="number" min="0" step="10" placeholder="0.00" value="${rateAmount}"
+                        oninput="calculateAll()"
+                        class="hotel-rate-input w-full px-2.5 py-2 bg-white border border-slate-300 rounded-xl text-sm font-semibold text-right text-slate-800 focus:ring-2 focus:ring-indigo-500 outline-none">
+                </div>
+                <div class="sm:col-span-1 text-right">
+                    <span class="hotel-row-total text-xs font-bold text-indigo-900">RM 0.00</span>
+                </div>
+                <div class="sm:col-span-1 flex justify-end sm:justify-center">
+                    <button type="button" onclick="removeHotelRow(this, '${syncId}')" title="Padam Hotel"
+                        class="no-print p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition cursor-pointer">
+                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            `;
+            container.appendChild(row);
+        }
+
+        // Selaraskan nama hotel ke pakej lain
+        function syncHotelName(syncId, newName) {
+            Object.keys(packagesState).forEach(id => {
+                if (id !== activePackageId) {
+                    const target = packagesState[id].hotels.find(h => h.syncId === syncId);
+                    if (target) target.name = newName;
+                }
+            });
+        }
+
+        // Padam baris hotel daripada pakej aktif & pakej lain
+        function removeHotelRow(btn, syncId) {
+            const row = btn.closest('.hotel-row');
+            if (row) row.remove();
+            Object.keys(packagesState).forEach(id => {
+                packagesState[id].hotels = packagesState[id].hotels.filter(h => h.syncId !== syncId);
+            });
+            toggleEmptyStates();
+            calculateAll();
         }
 
         // Tambah baris penaja baharu & selaraskan ke semua pakej lain
@@ -842,14 +1012,37 @@
 
             const totalIncome = totalFees + totalSponsors;
 
-            let totalExpenses = 0;
+            let baseExpenses = 0;
             document.querySelectorAll('#expenses-container .expense-row').forEach(row => {
                 const qty = parseFloat(row.querySelector('.expense-qty').value) || 0;
                 const cost = parseFloat(row.querySelector('.expense-cost').value) || 0;
                 const rowSum = qty * cost;
                 row.querySelector('.expense-row-total').textContent = formatRM(rowSum);
-                totalExpenses += rowSum;
+                baseExpenses += rowSum;
             });
+
+            // Kira kos setiap baris hotel yang dimasukkan (diabaikan untuk Bengkel Online)
+            const hotelOptions = [];
+            if (activePackageId !== 'online') {
+                document.querySelectorAll('#hotels-container .hotel-row').forEach((row, idx) => {
+                    const name = row.querySelector('.hotel-name-input').value.trim() || `Pilihan Hotel ${idx + 1}`;
+                    const rateType = row.querySelector('.hotel-type-select').value;
+                    const rateAmount = parseFloat(row.querySelector('.hotel-rate-input').value) || 0;
+                    const hotelCost = rateType === 'per_pax' ? (rateAmount * pax) : rateAmount;
+                    row.querySelector('.hotel-row-total').textContent = formatRM(hotelCost);
+                    hotelOptions.push({
+                        name,
+                        rateType,
+                        rateAmount,
+                        hotelCost,
+                        totalExpense: baseExpenses + hotelCost
+                    });
+                });
+            }
+
+            // Gunakan hotel pertama sebagai rujukan kad utama jika wujud, atau perbelanjaan asas jika tiada hotel
+            const primaryHotel = hotelOptions.length > 0 ? hotelOptions[0] : null;
+            const totalExpenses = primaryHotel ? primaryHotel.totalExpense : baseExpenses;
 
             const netBalance = totalIncome - totalExpenses;
             const profitMargin = totalIncome > 0 ? ((netBalance / totalIncome) * 100) : 0;
@@ -867,15 +1060,44 @@
             document.getElementById('subtotal-sponsors').textContent = formatRM(totalSponsors);
             document.getElementById('badge-total-income').textContent = formatRM(totalIncome);
 
-            document.getElementById('badge-total-expense').textContent = formatRM(totalExpenses);
-            document.getElementById('footer-total-expense').textContent = formatRM(totalExpenses);
+            document.getElementById('badge-total-expense').textContent = primaryHotel
+                ? `${formatRM(baseExpenses)} + Hotel`
+                : formatRM(baseExpenses);
+            document.getElementById('footer-total-expense').textContent = formatRM(baseExpenses);
 
             // Kemas kini Kad Ringkasan Kewangan
             document.getElementById('summary-pax-count').textContent = pax;
             document.getElementById('summary-fees').textContent = formatRM(totalFees);
             document.getElementById('summary-sponsors').textContent = formatRM(totalSponsors);
             document.getElementById('summary-total-income').textContent = formatRM(totalIncome);
-            document.getElementById('summary-total-expense').textContent = formatRM(totalExpenses);
+
+            // Paparkan pecahan Jumlah Perbelanjaan (B) mengikut setiap hotel yang dibuat
+            const expenseBreakdownEl = document.getElementById('summary-expenses-breakdown');
+            if (hotelOptions.length > 0) {
+                expenseBreakdownEl.innerHTML = hotelOptions.map(ht => {
+                    const htNet = totalIncome - ht.totalExpense;
+                    return `
+                        <div class="py-2 px-3 bg-rose-50/70 rounded-xl border border-rose-100 space-y-1">
+                            <div class="flex justify-between items-center font-bold text-rose-900 text-xs sm:text-sm">
+                                <span>JUMLAH PERBELANJAAN (B) — ${ht.name}</span>
+                                <span>${formatRM(ht.totalExpense)}</span>
+                            </div>
+                            <div class="flex justify-between items-center text-[11px] text-slate-600">
+                                <span>Asas (${formatRM(baseExpenses)}) + Hotel (${formatRM(ht.hotelCost)})</span>
+                                <span class="font-bold ${htNet >= 0 ? 'text-emerald-700' : 'text-rose-700'}">Baki: ${formatRM(htNet)}</span>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            } else {
+                expenseBreakdownEl.innerHTML = `
+                    <div class="flex justify-between items-center py-2 px-3 bg-rose-50/70 rounded-xl font-bold text-rose-900">
+                        <span>JUMLAH PERBELANJAAN (B)</span>
+                        <span id="summary-total-expense">${formatRM(baseExpenses)}</span>
+                    </div>
+                `;
+            }
+
             document.getElementById('net-balance').textContent = formatRM(netBalance);
 
             const banner = document.getElementById('profit-banner');
@@ -884,11 +1106,11 @@
 
             if (netBalance >= 0) {
                 banner.className = 'bg-emerald-600 text-white px-5 py-5 transition-colors duration-300';
-                statusLabel.textContent = 'Lebihan / Keuntungan Pakej';
+                statusLabel.textContent = primaryHotel ? `Lebihan / Untung (${primaryHotel.name})` : 'Lebihan / Keuntungan Pakej';
                 marginText.textContent = `Margin keuntungan: ${profitMargin.toFixed(1)}% daripada jumlah pendapatan`;
             } else {
                 banner.className = 'bg-rose-600 text-white px-5 py-5 transition-colors duration-300';
-                statusLabel.textContent = 'Defisit / Kekurangan Dana';
+                statusLabel.textContent = primaryHotel ? `Defisit Dana (${primaryHotel.name})` : 'Defisit / Kekurangan Dana';
                 marginText.textContent = `Defisit sebanyak ${Math.abs(profitMargin).toFixed(1)}% berbanding jumlah pendapatan`;
             }
 
@@ -908,7 +1130,7 @@
             if (totalIncome === 0 && totalExpenses === 0) {
                 adviceBox.textContent = 'Sila masukkan bilangan peserta, kadar yuran, dan kos perbelanjaan untuk melihat analisis kelayakan pakej ini.';
             } else if (netBalance > 0) {
-                adviceBox.innerHTML = `<strong>Berdaya Maju:</strong> Pakej ini menjana lebihan bersih <strong>${formatRM(netBalance)}</strong>. Anda hanya memerlukan minimum <strong>${breakEvenPax} peserta</strong> untuk mencapai titik pulang modal.`;
+                adviceBox.innerHTML = `<strong>Berdaya Maju:</strong> Pakej ini menjana lebihan bersih <strong>${formatRM(netBalance)}</strong>${primaryHotel ? ` di <strong>${primaryHotel.name}</strong>` : ''}. Anda hanya memerlukan minimum <strong>${breakEvenPax} peserta</strong> untuk mencapai titik pulang modal.`;
             } else if (netBalance === 0) {
                 adviceBox.innerHTML = `<strong>Pulang Modal (Break-Even):</strong> Pendapatan menyamai kos perbelanjaan. Tambah bilangan peserta atau kurangkan kos seunit untuk menjana lebihan.`;
             } else {
@@ -919,70 +1141,87 @@
             updateComparisonTable();
         }
 
-        // Kemas kini jadual analisis perbandingan antara semua pakej
+        // Kemas kini jadual analisis perbandingan antara semua pakej (memaparkan setiap pilihan hotel sebagai baris perbandingan)
         function updateComparisonTable() {
             const tbody = document.getElementById('comparison-table-body');
             if (!tbody) return;
             tbody.innerHTML = '';
 
-            let bestPkg = null;
+            let bestPkgLabel = null;
             let highestNet = -Infinity;
 
             Object.values(packagesState).forEach(pkg => {
                 const fees = pkg.participants * pkg.fee;
                 const sponsors = pkg.sponsors.reduce((sum, s) => sum + (parseFloat(s.amount) || 0), 0);
                 const income = fees + sponsors;
-                const expenses = pkg.expenses.reduce((sum, e) => sum + ((e.qty || 0) * (parseFloat(e.unitCost) || 0)), 0);
-                const net = income - expenses;
-                const margin = income > 0 ? ((net / income) * 100).toFixed(1) + '%' : '0.0%';
+                const baseExp = pkg.expenses.reduce((sum, e) => sum + ((e.qty || 0) * (parseFloat(e.unitCost) || 0)), 0);
+                // Bina senarai variasi (Bengkel Online sentiasa tanpa hotel)
+                const hasHotels = pkg.id !== 'online' && pkg.hotels && pkg.hotels.length > 0;
+                const variants = hasHotels
+                    ? pkg.hotels.map((ht, idx) => {
+                        const htCost = computeHotelCost(ht, pkg.participants);
+                        return {
+                            hotelLabel: ht.name && ht.name.trim() !== '' ? ht.name : `Pilihan Hotel ${idx + 1}`,
+                            expenses: baseExp + htCost
+                        };
+                    })
+                    : [{ hotelLabel: pkg.id === 'online' ? 'Dalam Talian (Online)' : '-', expenses: baseExp }];
 
-                let breakEven = '-';
-                if (pkg.fee > 0) {
-                    const netExp = Math.max(0, expenses - sponsors);
-                    breakEven = Math.ceil(netExp / pkg.fee) + ' pax';
-                }
-
-                // Kemas kini label mini pada butang tab
+                // Kemas kini label mini pada butang tab berdasarkan pilihan pertama
+                const firstNet = income - variants[0].expenses;
                 const miniEl = document.getElementById(`mini-${pkg.id}`);
                 if (miniEl) {
-                    miniEl.textContent = `Bersih: ${formatRM(net)}`;
-                    miniEl.className = `text-xs mt-1.5 font-semibold ${net > 0 ? 'text-emerald-600' : (net < 0 ? 'text-rose-600' : 'text-slate-500')}`;
-                }
-
-                if ((income > 0 || expenses > 0) && net > highestNet) {
-                    highestNet = net;
-                    bestPkg = pkg;
+                    miniEl.textContent = `Bersih: ${formatRM(firstNet)}`;
+                    miniEl.className = `text-xs mt-1.5 font-semibold ${firstNet > 0 ? 'text-emerald-600' : (firstNet < 0 ? 'text-rose-600' : 'text-slate-500')}`;
                 }
 
                 const isCurrent = pkg.id === activePackageId;
-                const tr = document.createElement('tr');
-                tr.onclick = () => switchPackage(pkg.id);
-                tr.className = `cursor-pointer transition ${isCurrent ? 'bg-indigo-50/70 font-medium' : 'hover:bg-slate-50'}`;
 
-                tr.innerHTML = `
-                    <td class="py-3.5 px-4">
-                        <div class="flex items-center gap-2">
-                            <span class="font-bold text-slate-800">${pkg.shortLabel}</span>
-                            ${isCurrent ? '<span class="no-print text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-indigo-600 text-white">Aktif</span>' : ''}
-                        </div>
-                    </td>
-                    <td class="py-3.5 px-3 text-center text-slate-700">${pkg.participants}</td>
-                    <td class="py-3.5 px-3 text-right text-slate-700">${formatRM(fees)}</td>
-                    <td class="py-3.5 px-3 text-right text-slate-700">${formatRM(sponsors)}</td>
-                    <td class="py-3.5 px-3 text-right font-semibold text-emerald-700">${formatRM(income)}</td>
-                    <td class="py-3.5 px-3 text-right font-semibold text-rose-700">${formatRM(expenses)}</td>
-                    <td class="py-3.5 px-3 text-right font-bold ${net >= 0 ? 'text-emerald-600' : 'text-rose-600'}">${formatRM(net)}</td>
-                    <td class="py-3.5 px-3 text-center text-slate-700">${margin}</td>
-                    <td class="py-3.5 px-4 text-center text-slate-700">${breakEven}</td>
-                `;
-                tbody.appendChild(tr);
+                variants.forEach((v, vIdx) => {
+                    const net = income - v.expenses;
+                    const margin = income > 0 ? ((net / income) * 100).toFixed(1) + '%' : '0.0%';
+
+                    let breakEven = '-';
+                    if (pkg.fee > 0) {
+                        const netExp = Math.max(0, v.expenses - sponsors);
+                        breakEven = Math.ceil(netExp / pkg.fee) + ' pax';
+                    }
+
+                    if ((income > 0 || v.expenses > 0) && net > highestNet) {
+                        highestNet = net;
+                        bestPkgLabel = v.hotelLabel !== '-' ? `${pkg.shortLabel} (${v.hotelLabel})` : pkg.shortLabel;
+                    }
+
+                    const tr = document.createElement('tr');
+                    tr.onclick = () => switchPackage(pkg.id);
+                    tr.className = `cursor-pointer transition ${isCurrent ? 'bg-indigo-50/70 font-medium' : 'hover:bg-slate-50'}`;
+
+                    tr.innerHTML = `
+                        <td class="py-3.5 px-4">
+                            <div class="flex items-center gap-2">
+                                <span class="font-bold text-slate-800">${vIdx === 0 ? pkg.shortLabel : `<span class="text-slate-400 font-normal">↳</span> ${pkg.shortLabel}`}</span>
+                                ${isCurrent && vIdx === 0 ? '<span class="no-print text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-indigo-600 text-white">Aktif</span>' : ''}
+                            </div>
+                        </td>
+                        <td class="py-3.5 px-3 text-left text-xs text-slate-700 font-semibold">${v.hotelLabel !== '-' ? v.hotelLabel : '<span class="text-slate-400 italic font-normal">-</span>'}</td>
+                        <td class="py-3.5 px-3 text-center text-slate-700">${pkg.participants}</td>
+                        <td class="py-3.5 px-3 text-right text-slate-700">${formatRM(fees)}</td>
+                        <td class="py-3.5 px-3 text-right text-slate-700">${formatRM(sponsors)}</td>
+                        <td class="py-3.5 px-3 text-right font-semibold text-emerald-700">${formatRM(income)}</td>
+                        <td class="py-3.5 px-3 text-right font-semibold text-rose-700">${formatRM(v.expenses)}</td>
+                        <td class="py-3.5 px-3 text-right font-bold ${net >= 0 ? 'text-emerald-600' : 'text-rose-600'}">${formatRM(net)}</td>
+                        <td class="py-3.5 px-3 text-center text-slate-700">${margin}</td>
+                        <td class="py-3.5 px-4 text-center text-slate-700">${breakEven}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
             });
 
             const bestTextEl = document.getElementById('best-package-text');
-            if (bestPkg && highestNet > 0) {
-                bestTextEl.textContent = `Pakej Terbaik: ${bestPkg.shortLabel} (+${formatRM(highestNet)})`;
-            } else if (bestPkg) {
-                bestTextEl.textContent = `Pakej Tertinggi: ${bestPkg.shortLabel} (${formatRM(highestNet)})`;
+            if (bestPkgLabel && highestNet > 0) {
+                bestTextEl.textContent = `Pakej Terbaik: ${bestPkgLabel} (+${formatRM(highestNet)})`;
+            } else if (bestPkgLabel) {
+                bestTextEl.textContent = `Pakej Tertinggi: ${bestPkgLabel} (${formatRM(highestNet)})`;
             } else {
                 bestTextEl.textContent = 'Pakej Terbaik: Belum ditentukan';
             }
@@ -1012,11 +1251,13 @@
                 const fees = pkg.participants * pkg.fee;
                 const sponsorsTotal = pkg.sponsors.reduce((sum, s) => sum + (parseFloat(s.amount) || 0), 0);
                 const income = fees + sponsorsTotal;
-                const expensesTotal = pkg.expenses.reduce((sum, e) => sum + ((e.qty || 0) * (parseFloat(e.unitCost) || 0)), 0);
-                const net = income - expensesTotal;
+                const baseExpensesTotal = pkg.expenses.reduce((sum, e) => sum + ((e.qty || 0) * (parseFloat(e.unitCost) || 0)), 0);
 
                 const validSponsors = pkg.sponsors.filter(s => (s.org && s.org.trim() !== '') || (parseFloat(s.amount) || 0) > 0);
                 const validExpenses = pkg.expenses.filter(e => (e.item && e.item.trim() !== '') || ((e.qty || 0) * (parseFloat(e.unitCost) || 0)) > 0);
+                const validHotels = pkg.id !== 'online'
+                    ? (pkg.hotels || []).filter(h => (h.name && h.name.trim() !== '') || (parseFloat(h.rateAmount) || 0) > 0)
+                    : [];
 
                 const sponsorRowsHtml = validSponsors.length > 0
                     ? validSponsors.map(s => `
@@ -1037,16 +1278,41 @@
                             <td class="py-1.5 px-2 text-right font-medium text-slate-800">${formatRM(rowSum)}</td>
                         </tr>`;
                     }).join('')
-                    : `<tr><td colspan="4" class="py-1.5 px-2 text-slate-400 italic">Tiada item perbelanjaan direkodkan</td></tr>`;
+                    : `<tr><td colspan="4" class="py-1.5 px-2 text-slate-400 italic">Tiada item perbelanjaan asas direkodkan</td></tr>`;
+
+                // Bina ringkasan perbandingan hotel untuk cetakan jika ada hotel
+                let hotelSummaryRowsHtml = '';
+                if (validHotels.length > 0) {
+                    hotelSummaryRowsHtml = validHotels.map((ht, idx) => {
+                        const htCost = computeHotelCost(ht, pkg.participants);
+                        const grandExp = baseExpensesTotal + htCost;
+                        const grandNet = income - grandExp;
+                        const label = ht.name || `Pilihan Hotel ${idx + 1}`;
+                        const typeLabel = ht.rateType === 'per_pax' ? `${pkg.participants} pax × ${formatRM(ht.rateAmount)}` : 'Sewa Pukal';
+                        return `
+                            <tr class="bg-indigo-50/60 border-t border-indigo-200 font-semibold text-indigo-950">
+                                <td colspan="2" class="py-1.5 px-2">Pilihan Hotel: ${label} <span class="font-normal text-slate-600">(${typeLabel})</span></td>
+                                <td class="py-1.5 px-2 text-right">Kos Hotel: ${formatRM(htCost)}</td>
+                                <td class="py-1.5 px-2 text-right text-rose-800">Jumlah B: ${formatRM(grandExp)} <span class="block text-[10px] ${grandNet >= 0 ? 'text-emerald-700' : 'text-rose-700'}">Baki: ${formatRM(grandNet)}</span></td>
+                            </tr>
+                        `;
+                    }).join('');
+                } else {
+                    const net = income - baseExpensesTotal;
+                    hotelSummaryRowsHtml = `
+                        <tr class="bg-rose-50 font-bold text-rose-900">
+                            <td colspan="3" class="py-1.5 px-2">JUMLAH PERBELANJAAN (B) — Baki Bersih: ${formatRM(net)}</td>
+                            <td class="py-1.5 px-2 text-right">${formatRM(baseExpensesTotal)}</td>
+                        </tr>
+                    `;
+                }
 
                 const card = document.createElement('div');
                 card.className = 'print-page-break border border-slate-300 rounded-xl overflow-hidden bg-white';
                 card.innerHTML = `
                     <div class="bg-slate-100 px-4 py-2.5 border-b border-slate-300 flex items-center justify-between">
                         <h3 class="font-bold text-slate-900 text-sm">${pkg.label}</h3>
-                        <span class="text-xs font-bold px-2.5 py-0.5 rounded-full ${net >= 0 ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}">
-                            Baki Bersih: ${formatRM(net)}
-                        </span>
+                        <span class="text-xs font-semibold text-slate-600">Pendapatan: ${formatRM(income)}</span>
                     </div>
                     <div class="p-4 space-y-4 text-xs">
                         <!-- Bahagian 1: Pendapatan -->
@@ -1060,7 +1326,7 @@
                                     </tr>
                                     ${sponsorRowsHtml}
                                     <tr class="bg-emerald-50 font-bold text-emerald-900">
-                                        <td class="py-1.5 px-2">JUMLAH PENDAPATAN</td>
+                                        <td class="py-1.5 px-2">JUMLAH PENDAPATAN (A)</td>
                                         <td class="py-1.5 px-2 text-right">${formatRM(income)}</td>
                                     </tr>
                                 </tbody>
@@ -1069,22 +1335,23 @@
 
                         <!-- Bahagian 2: Perbelanjaan -->
                         <div>
-                            <h4 class="font-bold text-rose-800 uppercase mb-1.5">Bahagian 2: Perbelanjaan</h4>
+                            <h4 class="font-bold text-rose-800 uppercase mb-1.5">Bahagian 2: Perbelanjaan & Pilihan Lokasi Hotel</h4>
                             <table class="w-full border border-slate-200">
                                 <thead>
                                     <tr class="bg-slate-50 border-b border-slate-200 text-slate-600">
                                         <th class="py-1.5 px-2 text-left">Butiran</th>
                                         <th class="py-1.5 px-2 text-center w-16">Kuantiti</th>
                                         <th class="py-1.5 px-2 text-right w-28">Kos Seunit</th>
-                                        <th class="py-1.5 px-2 text-right w-28">Jumlah</th>
+                                        <th class="py-1.5 px-2 text-right w-32">Jumlah</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     ${expenseRowsHtml}
-                                    <tr class="bg-rose-50 font-bold text-rose-900">
-                                        <td colspan="3" class="py-1.5 px-2">JUMLAH PERBELANJAAN</td>
-                                        <td class="py-1.5 px-2 text-right">${formatRM(expensesTotal)}</td>
+                                    <tr class="bg-slate-100 font-semibold text-slate-800 border-t border-slate-200">
+                                        <td colspan="3" class="py-1.5 px-2">Jumlah Perbelanjaan Asas (Tanpa Hotel)</td>
+                                        <td class="py-1.5 px-2 text-right">${formatRM(baseExpensesTotal)}</td>
                                     </tr>
+                                    ${hotelSummaryRowsHtml}
                                 </tbody>
                             </table>
                         </div>
@@ -1104,15 +1371,27 @@
                 const fees = pkg.participants * pkg.fee;
                 const sponsors = pkg.sponsors.reduce((sum, s) => sum + (parseFloat(s.amount) || 0), 0);
                 const income = fees + sponsors;
-                const expenses = pkg.expenses.reduce((sum, e) => sum + ((e.qty || 0) * (parseFloat(e.unitCost) || 0)), 0);
-                const net = income - expenses;
+                const baseExp = pkg.expenses.reduce((sum, e) => sum + ((e.qty || 0) * (parseFloat(e.unitCost) || 0)), 0);
 
                 text += `• ${pkg.label}\n`;
                 text += `  - Peserta: ${pkg.participants} pax @ ${formatRM(pkg.fee)} = ${formatRM(fees)}\n`;
                 text += `  - Penajaan/Sumbangan: ${formatRM(sponsors)}\n`;
-                text += `  - Jumlah Pendapatan: ${formatRM(income)}\n`;
-                text += `  - Jumlah Perbelanjaan: ${formatRM(expenses)}\n`;
-                text += `  - Baki Bersih (Untung/Defisit): ${formatRM(net)}\n\n`;
+                text += `  - Jumlah Pendapatan (A): ${formatRM(income)}\n`;
+
+                if (pkg.id !== 'online' && pkg.hotels && pkg.hotels.length > 0) {
+                    pkg.hotels.forEach((ht, i) => {
+                        const htCost = computeHotelCost(ht, pkg.participants);
+                        const totalExp = baseExp + htCost;
+                        const net = income - totalExp;
+                        const htName = ht.name || `Pilihan Hotel ${i + 1}`;
+                        text += `  - [${htName}] Jumlah Perbelanjaan (B): ${formatRM(totalExp)} | Baki Bersih: ${formatRM(net)}\n`;
+                    });
+                } else {
+                    const net = income - baseExp;
+                    text += `  - Jumlah Perbelanjaan (B): ${formatRM(baseExp)}\n`;
+                    text += `  - Baki Bersih (Untung/Defisit): ${formatRM(net)}\n`;
+                }
+                text += `\n`;
             });
 
             const tempTextarea = document.createElement('textarea');
