@@ -4,14 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pengiraan Penjanaan Pakej Bengkel</title>
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Google Fonts: Inter -->
+    <script src="https://unpkg.com/lucide@latest"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <!-- Lucide Icons -->
-    <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -97,11 +94,20 @@
                     <p class="text-indigo-200 text-sm mt-1">Urus maklumat setiap pakej secara berasingan dan bandingkan unjuran keuntungan secara langsung.</p>
                 </div>
                 <div class="flex flex-wrap items-center gap-2.5 no-print">
-                    <button onclick="copySummary()" class="inline-flex items-center gap-2 px-4 py-2.5 bg-white/10 hover:bg-white/20 text-white border border-white/20 rounded-xl text-sm font-medium transition cursor-pointer">
-                        <i data-lucide="copy" class="w-4 h-4"></i>
-                        <span>Salin Ringkasan (boleh paste di Word)</span>
+                    <input type="file" id="csv-file-input" accept=".csv,text/csv" class="hidden" onchange="handleImportCSV(event)">
+                    <button type="button" onclick="triggerImportCSV()" class="inline-flex items-center gap-2 px-3.5 py-2.5 bg-amber-500/20 hover:bg-amber-500/30 text-amber-100 border border-amber-400/40 rounded-xl text-sm font-medium transition cursor-pointer">
+                        <i data-lucide="upload" class="w-4 h-4"></i>
+                        <span>Import CSV</span>
                     </button>
-                    <button onclick="window.print()" class="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-sm font-semibold shadow-sm transition cursor-pointer">
+                    <button type="button" onclick="exportToCSV()" class="inline-flex items-center gap-2 px-3.5 py-2.5 bg-sky-500/20 hover:bg-sky-500/30 text-sky-100 border border-sky-400/40 rounded-xl text-sm font-medium transition cursor-pointer">
+                        <i data-lucide="download" class="w-4 h-4"></i>
+                        <span>Eksport CSV</span>
+                    </button>
+                    <button type="button" onclick="copySummary()" class="inline-flex items-center gap-2 px-3.5 py-2.5 bg-white/10 hover:bg-white/20 text-white border border-white/20 rounded-xl text-sm font-medium transition cursor-pointer">
+                        <i data-lucide="copy" class="w-4 h-4"></i>
+                        <span>Salin Ringkasan</span>
+                    </button>
+                    <button type="button" onclick="window.print()" class="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-sm font-semibold shadow-sm transition cursor-pointer">
                         <i data-lucide="printer" class="w-4 h-4"></i>
                         <span>Cetak / PDF</span>
                     </button>
@@ -295,9 +301,9 @@
                                 <div>
                                     <h3 class="text-sm font-bold text-indigo-950 flex items-center gap-2">
                                         <i data-lucide="building-2" class="w-4 h-4 text-indigo-600"></i>
-                                        <span>Tetapan Pilihan Lokasi / Hotel (Bersebelahan Antara Pakej)</span>
+                                        <span>Tetapan Pilihan Lokasi / Hotel & Kos Berkaitan Tempat</span>
                                     </h3>
-                                    <p class="text-[11px] text-indigo-700 mt-0.5">Masukkan kadar hotel bagi setiap pakej secara bersebelahan (Bengkel Online dikecualikan)</p>
+                                    <p class="text-[11px] text-indigo-700 mt-0.5">Isi kadar khusus mengikut hotel bagi Pakej Penginapan, Sewa Dewan & Kos Tambahan Hotel (Bengkel Online dikecualikan)</p>
                                 </div>
                                 <button type="button" onclick="addHotelRow()"
                                     class="no-print inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl shadow-sm transition cursor-pointer">
@@ -306,22 +312,12 @@
                                 </button>
                             </div>
 
-                            <!-- Jadual Hotel Bersebelahan (Tanpa skrol mendatar pada desktop) -->
-                            <div>
-                                <div class="grid grid-cols-12 gap-2 px-1 pb-1.5 text-[11px] font-bold text-indigo-900/80 uppercase">
-                                    <div class="col-span-3">Nama Hotel / Lokasi</div>
-                                    <div class="col-span-2">Jenis Caj</div>
-                                    <div class="col-span-2 text-right">3H2M (RM)</div>
-                                    <div class="col-span-2 text-right">2H1M (RM)</div>
-                                    <div class="col-span-2 text-right">1 Hari (RM)</div>
-                                    <div class="col-span-1 text-center">Padam</div>
-                                </div>
-                                <div id="hotels-container" class="space-y-2"></div>
-                            </div>
+                            <!-- Senarai Kad Hotel dengan Pecahan Kos Khusus Hotel -->
+                            <div id="hotels-container" class="space-y-3"></div>
 
                             <!-- Empty State Hotel -->
                             <div id="hotels-empty" class="text-center py-4 px-3 border border-dashed border-indigo-300 rounded-xl text-xs text-indigo-700/80 bg-white/50 mt-2">
-                                Tiada pilihan hotel ditambah. Klik <strong>"+ Tambah Hotel / Lokasi"</strong> untuk membandingkan kos mengikut tempat hotel.
+                                Tiada pilihan hotel ditambah. Klik <strong>"+ Tambah Hotel / Lokasi"</strong> untuk memasukkan kadar bilik, sewa dewan & kos tambahan mengikut tempat.
                             </div>
                         </div>
 
@@ -478,8 +474,8 @@
 
             <!-- Rumusan Perbandingan -->
             <div class="bg-slate-50/80 border-t border-slate-200/80 px-5 py-3.5 text-xs text-slate-600 flex flex-col sm:flex-row sm:items-center justify-between gap-2 no-print">
-                <span>* Semua pakej dikira secara automatik berdasarkan input bersebelahan di atas.</span>
-                <span class="font-medium text-slate-700">Nota: Data disimpan dalam memori pelayar sementara tab ini dibuka.</span>
+                <span>* Semua pakej dikira secara automatik.</span>
+                <span class="font-medium text-slate-700">Data tidak disimpan secara live. Perlu disimpan secara Eksport CSV.</span>
             </div>
         </section>
 
@@ -548,10 +544,21 @@
             return prefix + '_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7);
         }
 
-        // Kira kos hotel bagi satu pakej berdasarkan jenis caj (/ Pax atau Sewa Pukal)
+        // Kira kos hotel bagi satu pakej (Pakej Utama + Sewa Dewan + Caj Tambahan Manual)
         function computeHotelCost(hotelObj, pax) {
-            const rate = parseFloat(hotelObj.rateAmount) || 0;
-            return hotelObj.rateType === 'per_pax' ? (rate * pax) : rate;
+            const pkgRate = parseFloat(hotelObj.rateAmount) || 0;
+            const pkgCost = hotelObj.rateType === 'per_pax' ? (pkgRate * pax) : pkgRate;
+
+            const hallRate = parseFloat(hotelObj.hallAmount) || 0;
+            const hallType = hotelObj.hallType || 'lump_sum';
+            const hallCost = hallType === 'per_pax' ? (hallRate * pax) : hallRate;
+
+            const extraCost = (hotelObj.extras || []).reduce((sum, ex) => {
+                const amt = parseFloat(ex.amount) || 0;
+                return sum + (ex.type === 'per_pax' ? (amt * pax) : amt);
+            }, 0);
+
+            return pkgCost + hallCost + extraCost;
         }
 
         // Format mata wang Ringgit Malaysia (RM)
@@ -607,12 +614,30 @@
                     const syncId = row.dataset.syncId || generateSyncId('ht');
                     const name = row.querySelector('.hotel-name-input').value;
                     const rateType = row.querySelector('.hotel-type-select').value;
+                    const hallType = row.querySelector('.hotel-hall-type-select').value;
                     const rateInput = row.querySelector(`.hotel-rate-${pid}`);
+                    const hallInput = row.querySelector(`.hotel-hall-${pid}`);
+
+                    const extraRows = row.querySelectorAll('.hotel-extra-row');
+                    const extras = Array.from(extraRows).map(exRow => {
+                        const exName = exRow.querySelector('.hotel-extra-name').value;
+                        const exType = exRow.querySelector('.hotel-extra-type').value;
+                        const exAmtInput = exRow.querySelector(`.hotel-extra-${pid}`);
+                        return {
+                            name: exName,
+                            type: exType,
+                            amount: exAmtInput ? exAmtInput.value : ''
+                        };
+                    });
+
                     return {
                         syncId,
                         name,
                         rateType,
-                        rateAmount: rateInput ? rateInput.value : ''
+                        rateAmount: rateInput ? rateInput.value : '',
+                        hallType,
+                        hallAmount: hallInput ? hallInput.value : '',
+                        extras
                     };
                 });
             });
@@ -684,15 +709,23 @@
         // Tambah baris hotel/lokasi baharu secara bersebelahan
         function addHotelRow(name = '', rateType = 'per_pax', rateAmount = '') {
             const syncId = generateSyncId('ht');
-            const rates = { '3d2n': rateAmount, '2d1n': '', '1d': '' };
-            renderHotelRow(name, rateType, rates, syncId);
+            const hotelData = {
+                rateType: rateType,
+                hallType: 'lump_sum',
+                rates: { '3d2n': rateAmount, '2d1n': '', '1d': '' },
+                halls: { '3d2n': '', '2d1n': '', '1d': '' }
+            };
+            renderHotelRow(name, hotelData, syncId);
 
             ['3d2n', '2d1n', '1d'].forEach(id => {
                 packagesState[id].hotels.push({
                     syncId: syncId,
                     name: name,
-                    rateType: rateType,
-                    rateAmount: rates[id]
+                    rateType: hotelData.rateType,
+                    rateAmount: hotelData.rates[id],
+                    hallType: hotelData.hallType,
+                    hallAmount: hotelData.halls[id],
+                    extras: []
                 });
             });
 
@@ -701,50 +734,179 @@
             calculateAll();
         }
 
-        // Bina elemen DOM baris hotel bersebelahan (3H2M, 2H1M, 1 Hari)
-        function renderHotelRow(name, rateType, ratesObj, syncId) {
-            const container = document.getElementById('hotels-container');
-            const row = document.createElement('div');
-            row.className = 'hotel-row grid grid-cols-12 gap-2 items-center bg-white/90 sm:bg-transparent p-2 sm:p-0 rounded-xl border sm:border-0 border-indigo-200';
-            row.dataset.syncId = syncId;
+        // Tambah baris kos tambahan manual di dalam kad hotel tertentu
+        function addHotelExtraRow(btnOrContainer, name = '', type = 'lump_sum', amounts = {}) {
+            const container = btnOrContainer.classList && btnOrContainer.classList.contains('hotel-extras-container')
+                ? btnOrContainer
+                : btnOrContainer.closest('.hotel-row').querySelector('.hotel-extras-container');
 
-            const r3 = typeof ratesObj === 'object' ? (ratesObj['3d2n'] ?? '') : ratesObj;
-            const r2 = typeof ratesObj === 'object' ? (ratesObj['2d1n'] ?? '') : '';
-            const r1 = typeof ratesObj === 'object' ? (ratesObj['1d'] ?? '') : '';
+            const exRow = document.createElement('div');
+            exRow.className = 'hotel-extra-row grid grid-cols-12 gap-2 items-center pt-1.5 border-t border-dashed border-indigo-100';
 
-            row.innerHTML = `
-                <div class="col-span-3">
-                    <input type="text" placeholder="Nama Hotel / Lokasi" value="${name}"
-                        oninput="calculateAll()"
-                        class="hotel-name-input w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-xl text-xs sm:text-sm text-slate-800 focus:ring-2 focus:ring-indigo-500 outline-none">
+            const v3 = amounts['3d2n'] ?? '';
+            const v2 = amounts['2d1n'] ?? '';
+            const v1 = amounts['1d'] ?? '';
+
+            exRow.innerHTML = `
+                <div class="col-span-4 flex items-center gap-1">
+                    <button type="button" onclick="removeHotelExtraRow(this)" title="Padam Kos Tambahan"
+                        class="no-print p-1 text-rose-500 hover:bg-rose-50 rounded transition cursor-pointer shrink-0">
+                        <i data-lucide="x" class="w-3.5 h-3.5"></i>
+                    </button>
+                    <input type="text" placeholder="Butiran caj tambahan..." value="${name}" oninput="calculateAll()"
+                        class="hotel-extra-name w-full px-2 py-1 bg-amber-50/40 border border-amber-200 rounded-lg text-xs text-slate-800 placeholder-slate-400 focus:ring-2 focus:ring-indigo-500 outline-none">
                 </div>
                 <div class="col-span-2">
                     <select onchange="calculateAll()"
-                        class="hotel-type-select w-full px-2 py-1.5 bg-white border border-slate-300 rounded-xl text-xs text-slate-800 focus:ring-2 focus:ring-indigo-500 outline-none">
-                        <option value="per_pax" ${rateType === 'per_pax' ? 'selected' : ''}>/ Pax</option>
-                        <option value="lump_sum" ${rateType === 'lump_sum' ? 'selected' : ''}>Pukal</option>
+                        class="hotel-extra-type w-full px-1.5 py-1 bg-white border border-slate-300 rounded-lg text-[11px] text-slate-800 focus:ring-2 focus:ring-indigo-500 outline-none">
+                        <option value="lump_sum" ${type === 'lump_sum' ? 'selected' : ''}>Pukal</option>
+                        <option value="per_pax" ${type === 'per_pax' ? 'selected' : ''}>/ Pax</option>
                     </select>
                 </div>
                 <div class="col-span-2">
-                    <input type="number" min="0" step="10" placeholder="0.00" value="${r3}"
-                        oninput="calculateAll()"
-                        class="hotel-rate-3d2n w-full px-2 py-1.5 bg-white border border-slate-300 rounded-xl text-xs sm:text-sm font-semibold text-right text-slate-800 focus:ring-2 focus:ring-indigo-500 outline-none">
+                    <input type="number" min="0" step="5" placeholder="0.00" value="${v3}" oninput="calculateAll()"
+                        class="hotel-extra-3d2n w-full px-2 py-1 bg-white border border-slate-300 rounded-lg text-xs font-semibold text-right text-slate-800 focus:ring-2 focus:ring-indigo-500 outline-none">
                 </div>
                 <div class="col-span-2">
-                    <input type="number" min="0" step="10" placeholder="0.00" value="${r2}"
-                        oninput="calculateAll()"
-                        class="hotel-rate-2d1n w-full px-2 py-1.5 bg-white border border-slate-300 rounded-xl text-xs sm:text-sm font-semibold text-right text-slate-800 focus:ring-2 focus:ring-indigo-500 outline-none">
+                    <input type="number" min="0" step="5" placeholder="0.00" value="${v2}" oninput="calculateAll()"
+                        class="hotel-extra-2d1n w-full px-2 py-1 bg-white border border-slate-300 rounded-lg text-xs font-semibold text-right text-slate-800 focus:ring-2 focus:ring-indigo-500 outline-none">
                 </div>
                 <div class="col-span-2">
-                    <input type="number" min="0" step="10" placeholder="0.00" value="${r1}"
-                        oninput="calculateAll()"
-                        class="hotel-rate-1d w-full px-2 py-1.5 bg-white border border-slate-300 rounded-xl text-xs sm:text-sm font-semibold text-right text-slate-800 focus:ring-2 focus:ring-indigo-500 outline-none">
+                    <input type="number" min="0" step="5" placeholder="0.00" value="${v1}" oninput="calculateAll()"
+                        class="hotel-extra-1d w-full px-2 py-1 bg-white border border-slate-300 rounded-lg text-xs font-semibold text-right text-slate-800 focus:ring-2 focus:ring-indigo-500 outline-none">
                 </div>
-                <div class="col-span-1 flex justify-center">
+            `;
+            container.appendChild(exRow);
+            lucide.createIcons();
+            calculateAll();
+        }
+
+        // Padam baris kos tambahan manual dalam kad hotel
+        function removeHotelExtraRow(btn) {
+            const exRow = btn.closest('.hotel-extra-row');
+            if (exRow) exRow.remove();
+            calculateAll();
+        }
+
+        // Bina elemen DOM kad hotel bersebelahan (Pakej Utama, Sewa Dewan & Kos Tambahan Manual)
+        function renderHotelRow(name, hotelData, syncId) {
+            const container = document.getElementById('hotels-container');
+            const row = document.createElement('div');
+            row.className = 'hotel-row bg-white border border-indigo-200/90 rounded-xl p-3 shadow-xs space-y-2.5';
+            row.dataset.syncId = syncId;
+
+            const rateType = hotelData.rateType || 'per_pax';
+            const hallType = hotelData.hallType || 'lump_sum';
+            const r3 = hotelData.rates?.['3d2n'] ?? '';
+            const r2 = hotelData.rates?.['2d1n'] ?? '';
+            const r1 = hotelData.rates?.['1d'] ?? '';
+
+            const h3 = hotelData.halls?.['3d2n'] ?? '';
+            const h2 = hotelData.halls?.['2d1n'] ?? '';
+            const h1 = hotelData.halls?.['1d'] ?? '';
+
+            row.innerHTML = `
+                <!-- Baris Tajuk Hotel -->
+                <div class="flex items-center justify-between gap-2 pb-2 border-b border-indigo-100">
+                    <div class="flex items-center gap-2 flex-1">
+                        <span class="w-6 h-6 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center shrink-0">
+                            <i data-lucide="map-pin" class="w-3.5 h-3.5"></i>
+                        </span>
+                        <input type="text" placeholder="Nama Hotel / Lokasi (Contoh: Hotel Royale Chulan)" value="${name}"
+                            oninput="calculateAll()"
+                            class="hotel-name-input w-full px-2.5 py-1.5 bg-indigo-50/40 border border-indigo-200 rounded-lg text-xs sm:text-sm font-bold text-indigo-950 placeholder-indigo-400 focus:ring-2 focus:ring-indigo-500 outline-none">
+                    </div>
                     <button type="button" onclick="removeHotelRow(this, '${syncId}')" title="Padam Hotel"
-                        class="no-print p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition cursor-pointer">
-                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                        class="no-print inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-rose-600 hover:bg-rose-50 rounded-lg transition cursor-pointer">
+                        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                        <span class="hidden sm:inline">Padam</span>
                     </button>
+                </div>
+
+                <!-- Pengepala Lajur Pakej -->
+                <div class="grid grid-cols-12 gap-2 px-1 text-[10px] font-bold text-slate-500 uppercase">
+                    <div class="col-span-4">Komponen Kos Hotel</div>
+                    <div class="col-span-2">Kiraan</div>
+                    <div class="col-span-2 text-right text-indigo-700">3H2M (RM)</div>
+                    <div class="col-span-2 text-right text-indigo-700">2H1M (RM)</div>
+                    <div class="col-span-2 text-right text-indigo-700">1 Hari (RM)</div>
+                </div>
+
+                <!-- 1. Pakej Penginapan / Bilik -->
+                <div class="grid grid-cols-12 gap-2 items-center">
+                    <div class="col-span-4 text-xs font-medium text-slate-700">Pakej Penginapan / Bilik</div>
+                    <div class="col-span-2">
+                        <select onchange="calculateAll()"
+                            class="hotel-type-select w-full px-1.5 py-1 bg-white border border-slate-300 rounded-lg text-[11px] text-slate-800 focus:ring-2 focus:ring-indigo-500 outline-none">
+                            <option value="per_pax" ${rateType === 'per_pax' ? 'selected' : ''}>/ Pax</option>
+                            <option value="lump_sum" ${rateType === 'lump_sum' ? 'selected' : ''}>Pukal</option>
+                        </select>
+                    </div>
+                    <div class="col-span-2">
+                        <input type="number" min="0" step="10" placeholder="0.00" value="${r3}" oninput="calculateAll()"
+                            class="hotel-rate-3d2n w-full px-2 py-1 bg-white border border-slate-300 rounded-lg text-xs font-semibold text-right text-slate-800 focus:ring-2 focus:ring-indigo-500 outline-none">
+                    </div>
+                    <div class="col-span-2">
+                        <input type="number" min="0" step="10" placeholder="0.00" value="${r2}" oninput="calculateAll()"
+                            class="hotel-rate-2d1n w-full px-2 py-1 bg-white border border-slate-300 rounded-lg text-xs font-semibold text-right text-slate-800 focus:ring-2 focus:ring-indigo-500 outline-none">
+                    </div>
+                    <div class="col-span-2">
+                        <input type="number" min="0" step="10" placeholder="0.00" value="${r1}" oninput="calculateAll()"
+                            class="hotel-rate-1d w-full px-2 py-1 bg-white border border-slate-300 rounded-lg text-xs font-semibold text-right text-slate-800 focus:ring-2 focus:ring-indigo-500 outline-none">
+                    </div>
+                </div>
+
+                <!-- 2. Sewa Dewan & PA Sistem Hotel -->
+                <div class="grid grid-cols-12 gap-2 items-center">
+                    <div class="col-span-4 text-xs font-medium text-slate-700">Sewa Dewan & Bilik Seminar</div>
+                    <div class="col-span-2">
+                        <select onchange="calculateAll()"
+                            class="hotel-hall-type-select w-full px-1.5 py-1 bg-white border border-slate-300 rounded-lg text-[11px] text-slate-800 focus:ring-2 focus:ring-indigo-500 outline-none">
+                            <option value="lump_sum" ${hallType === 'lump_sum' ? 'selected' : ''}>Pukal</option>
+                            <option value="per_pax" ${hallType === 'per_pax' ? 'selected' : ''}>/ Pax</option>
+                        </select>
+                    </div>
+                    <div class="col-span-2">
+                        <input type="number" min="0" step="10" placeholder="0.00" value="${h3}" oninput="calculateAll()"
+                            class="hotel-hall-3d2n w-full px-2 py-1 bg-white border border-slate-300 rounded-lg text-xs font-semibold text-right text-slate-800 focus:ring-2 focus:ring-indigo-500 outline-none">
+                    </div>
+                    <div class="col-span-2">
+                        <input type="number" min="0" step="10" placeholder="0.00" value="${h2}" oninput="calculateAll()"
+                            class="hotel-hall-2d1n w-full px-2 py-1 bg-white border border-slate-300 rounded-lg text-xs font-semibold text-right text-slate-800 focus:ring-2 focus:ring-indigo-500 outline-none">
+                    </div>
+                    <div class="col-span-2">
+                        <input type="number" min="0" step="10" placeholder="0.00" value="${h1}" oninput="calculateAll()"
+                            class="hotel-hall-1d w-full px-2 py-1 bg-white border border-slate-300 rounded-lg text-xs font-semibold text-right text-slate-800 focus:ring-2 focus:ring-indigo-500 outline-none">
+                    </div>
+                </div>
+
+                <!-- 3. Senarai Caj Tambahan Manual Hotel -->
+                <div class="hotel-extras-container space-y-2"></div>
+
+                <!-- Butang Tambah Caj Tambahan Hotel -->
+                <div class="pt-1 flex justify-start no-print">
+                    <button type="button" onclick="addHotelExtraRow(this)"
+                        class="inline-flex items-center gap-1 px-2.5 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-lg text-[11px] font-semibold transition cursor-pointer">
+                        <i data-lucide="plus" class="w-3 h-3"></i>
+                        <span>Tambah Kos Tambahan Hotel</span>
+                    </button>
+                </div>
+
+                <!-- 4. Paparan Auto Jumlah Kos Hotel Mengikut Pakej -->
+                <div class="pt-2 mt-1 border-t border-indigo-200/80 bg-indigo-50/60 -mx-3 -mb-3 px-3 py-2.5 rounded-b-xl grid grid-cols-12 gap-2 items-center">
+                    <div class="col-span-6 text-xs font-bold text-indigo-950 flex items-center gap-1.5">
+                        <i data-lucide="calculator" class="w-3.5 h-3.5 text-indigo-600 shrink-0"></i>
+                        <span>Jumlah Kos Hotel Ini</span>
+                    </div>
+                    <div class="col-span-2 text-right">
+                        <span class="hotel-subtotal-3d2n text-xs font-extrabold text-indigo-800">RM 0.00</span>
+                    </div>
+                    <div class="col-span-2 text-right">
+                        <span class="hotel-subtotal-2d1n text-xs font-extrabold text-indigo-800">RM 0.00</span>
+                    </div>
+                    <div class="col-span-2 text-right">
+                        <span class="hotel-subtotal-1d text-xs font-extrabold text-indigo-800">RM 0.00</span>
+                    </div>
                 </div>
             `;
             container.appendChild(row);
@@ -754,14 +916,14 @@
         function removeHotelRow(btn, syncId) {
             const row = btn.closest('.hotel-row');
             if (row) row.remove();
-            ALL_PKG_IDS.forEach(id => {
+            ['3d2n', '2d1n', '1d'].forEach(id => {
                 packagesState[id].hotels = packagesState[id].hotels.filter(h => h.syncId !== syncId);
             });
             toggleEmptyStates();
             calculateAll();
         }
 
-        // Tambah baris penaja baharu secara bersebelahan untuk semua pakej
+        // Tambah baris penaja baharu secara bersebelahan untuk kesemua 4 pakej
         function addSponsorRow(orgName = '', amount = '') {
             const syncId = generateSyncId('sp');
             const amounts = { '3d2n': amount, '2d1n': '', '1d': '', 'online': '' };
@@ -776,13 +938,15 @@
             });
 
             toggleEmptyStates();
-            lucide.createIcons();
+            if (window.lucide) lucide.createIcons();
             calculateAll();
         }
 
         // Bina elemen DOM baris penaja bersebelahan (3H2M, 2H1M, 1 Hari, Online)
         function renderSponsorRow(orgName, amountsObj, syncId) {
             const container = document.getElementById('sponsors-container');
+            if (!container) return;
+
             const row = document.createElement('div');
             row.className = 'sponsor-row grid grid-cols-12 gap-2 items-center bg-slate-50/70 sm:bg-transparent p-2 sm:p-0 rounded-xl border sm:border-0 border-slate-200';
             row.dataset.syncId = syncId;
@@ -794,29 +958,29 @@
 
             row.innerHTML = `
                 <div class="col-span-3">
-                    <input type="text" placeholder="Nama Organisasi" value="${orgName}"
+                    <input type="text" placeholder="Nama Organisasi / Penaja" value="${orgName}"
                         oninput="calculateAll()"
                         class="sponsor-org w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-xl text-xs sm:text-sm text-slate-800 focus:ring-2 focus:ring-emerald-500 outline-none">
                 </div>
                 <div class="col-span-2">
-                    <input type="number" min="0" step="10" placeholder="0.00" value="${a3}"
+                    <input type="number" min="0" step="50" placeholder="0.00" value="${a3}"
                         oninput="calculateAll()"
-                        class="sponsor-amt-3d2n w-full px-2 py-1.5 bg-white border border-slate-300 rounded-xl text-xs sm:text-sm font-semibold text-right text-slate-800 focus:ring-2 focus:ring-emerald-500 outline-none">
+                        class="sponsor-amt-3d2n w-full px-2 py-1.5 bg-white border border-slate-300 rounded-xl text-xs sm:text-sm text-right font-semibold text-slate-800 focus:ring-2 focus:ring-emerald-500 outline-none">
                 </div>
                 <div class="col-span-2">
-                    <input type="number" min="0" step="10" placeholder="0.00" value="${a2}"
+                    <input type="number" min="0" step="50" placeholder="0.00" value="${a2}"
                         oninput="calculateAll()"
-                        class="sponsor-amt-2d1n w-full px-2 py-1.5 bg-white border border-slate-300 rounded-xl text-xs sm:text-sm font-semibold text-right text-slate-800 focus:ring-2 focus:ring-emerald-500 outline-none">
+                        class="sponsor-amt-2d1n w-full px-2 py-1.5 bg-white border border-slate-300 rounded-xl text-xs sm:text-sm text-right font-semibold text-slate-800 focus:ring-2 focus:ring-emerald-500 outline-none">
                 </div>
                 <div class="col-span-2">
-                    <input type="number" min="0" step="10" placeholder="0.00" value="${a1}"
+                    <input type="number" min="0" step="50" placeholder="0.00" value="${a1}"
                         oninput="calculateAll()"
-                        class="sponsor-amt-1d w-full px-2 py-1.5 bg-white border border-slate-300 rounded-xl text-xs sm:text-sm font-semibold text-right text-slate-800 focus:ring-2 focus:ring-emerald-500 outline-none">
+                        class="sponsor-amt-1d w-full px-2 py-1.5 bg-white border border-slate-300 rounded-xl text-xs sm:text-sm text-right font-semibold text-slate-800 focus:ring-2 focus:ring-emerald-500 outline-none">
                 </div>
                 <div class="col-span-2">
-                    <input type="number" min="0" step="10" placeholder="0.00" value="${aOn}"
+                    <input type="number" min="0" step="50" placeholder="0.00" value="${aOn}"
                         oninput="calculateAll()"
-                        class="sponsor-amt-online w-full px-2 py-1.5 bg-white border border-slate-300 rounded-xl text-xs sm:text-sm font-semibold text-right text-slate-800 focus:ring-2 focus:ring-emerald-500 outline-none">
+                        class="sponsor-amt-online w-full px-2 py-1.5 bg-white border border-slate-300 rounded-xl text-xs sm:text-sm text-right font-semibold text-slate-800 focus:ring-2 focus:ring-emerald-500 outline-none">
                 </div>
                 <div class="col-span-1 flex justify-center">
                     <button type="button" onclick="removeSponsorRow(this, '${syncId}')" title="Padam Penaja"
@@ -927,6 +1091,18 @@
         function calculateAll() {
             saveCurrentStateToMemory();
 
+            // Kemas kini paparan auto jumlah di dalam setiap kotak hotel (3H2M, 2H1M, 1 Hari)
+            const hotelRows = document.querySelectorAll('#hotels-container .hotel-row');
+            hotelRows.forEach((row, idx) => {
+                ['3d2n', '2d1n', '1d'].forEach(pid => {
+                    const htObj = packagesState[pid].hotels[idx];
+                    const pax = packagesState[pid].participants || 0;
+                    const subtotal = htObj ? computeHotelCost(htObj, pax) : 0;
+                    const subEl = row.querySelector(`.hotel-subtotal-${pid}`);
+                    if (subEl) subEl.textContent = formatRM(subtotal);
+                });
+            });
+
             const allIncomesContainer = document.getElementById('summary-all-incomes');
             const allNetContainer = document.getElementById('summary-all-packages-net');
             if (allIncomesContainer) allIncomesContainer.innerHTML = '';
@@ -963,11 +1139,36 @@
                     allIncomesContainer.appendChild(incRow);
                 }
 
+                // Skema warna kontra (Colour Block) mengikut pakej
+                const pkgColorThemes = {
+                    '3d2n': {
+                        card: 'bg-purple-100/90 border-purple-300',
+                        badge: 'bg-purple-700 text-white',
+                        title: 'text-purple-950'
+                    },
+                    '2d1n': {
+                        card: 'bg-sky-100/90 border-sky-300',
+                        badge: 'bg-sky-700 text-white',
+                        title: 'text-sky-950'
+                    },
+                    '1d': {
+                        card: 'bg-amber-100/90 border-amber-300',
+                        badge: 'bg-amber-600 text-white',
+                        title: 'text-amber-950'
+                    },
+                    'online': {
+                        card: 'bg-emerald-100/90 border-emerald-300',
+                        badge: 'bg-emerald-700 text-white',
+                        title: 'text-emerald-950'
+                    }
+                };
+                const theme = pkgColorThemes[pid] || pkgColorThemes['3d2n'];
+
                 // Paparkan Jumlah Perbelanjaan (B) & Baki Bersih mengikut pakej dan pilihan hotel
                 if (allNetContainer) {
                     const hasHotels = pid !== 'online' && pkg.hotels && pkg.hotels.length > 0;
                     const pkgBox = document.createElement('div');
-                    pkgBox.className = 'p-3 rounded-xl bg-slate-50 border border-slate-200/80 space-y-1.5';
+                    pkgBox.className = `p-3 rounded-xl border space-y-1.5 ${theme.card}`;
 
                     if (hasHotels) {
                         const hotelLines = pkg.hotels.map((ht, idx) => {
@@ -977,7 +1178,7 @@
                             const label = ht.name && ht.name.trim() !== '' ? ht.name : `Hotel ${idx + 1}`;
                             return `
                                 <div class="pt-1.5 border-t border-slate-200/70 flex justify-between items-center text-[11px]">
-                                    <span class="text-slate-600 font-medium">${label} <span class="text-slate-400">(Belanja: ${formatRM(totalExp)})</span></span>
+                                    <span class="text-slate-700 font-medium">${label} <span class="text-slate-500">(Belanja: ${formatRM(totalExp)})</span></span>
                                     <span class="font-bold ${net >= 0 ? 'text-emerald-700' : 'text-rose-700'}">${net >= 0 ? '+' : ''}${formatRM(net)}</span>
                                 </div>
                             `;
@@ -985,7 +1186,10 @@
 
                         pkgBox.innerHTML = `
                             <div class="flex justify-between items-center">
-                                <span class="font-bold text-slate-900">${pkg.shortLabel}</span>
+                                <span class="inline-flex items-center gap-1.5 font-bold ${theme.title}">
+                                    <span class="w-2 h-2 rounded-full ${theme.badge}"></span>
+                                    ${pkg.shortLabel}
+                                </span>
                                 <span class="text-[11px] font-semibold text-rose-700">Asas: ${formatRM(baseExp)}</span>
                             </div>
                             ${hotelLines}
@@ -994,11 +1198,14 @@
                         const net = totalIncome - baseExp;
                         pkgBox.innerHTML = `
                             <div class="flex justify-between items-center">
-                                <span class="font-bold text-slate-900">${pkg.shortLabel}</span>
+                                <span class="inline-flex items-center gap-1.5 font-bold ${theme.title}">
+                                    <span class="w-2 h-2 rounded-full ${theme.badge}"></span>
+                                    ${pkg.shortLabel}
+                                </span>
                                 <span class="text-[11px] font-semibold text-rose-700">Belanja (B): ${formatRM(baseExp)}</span>
                             </div>
                             <div class="pt-1 border-t border-slate-200/70 flex justify-between items-center">
-                                <span class="text-[11px] text-slate-500">Baki Bersih (A - B)</span>
+                                <span class="text-[11px] text-slate-600">Baki Bersih (A - B)</span>
                                 <span class="font-extrabold text-sm ${net >= 0 ? 'text-emerald-700' : 'text-rose-700'}">${net >= 0 ? '+' : ''}${formatRM(net)}</span>
                             </div>
                         `;
@@ -1011,7 +1218,7 @@
             updateComparisonTable();
         }
 
-        // Kemas kini jadual analisis perbandingan antara semua pakej (memaparkan setiap pilihan hotel sebagai baris perbandingan)
+        // Kemas kini jadual analisis perbandingan antara semua pakej (dengan warna berbeza mengikut pakej)
         function updateComparisonTable() {
             const tbody = document.getElementById('comparison-table-body');
             if (!tbody) return;
@@ -1019,6 +1226,34 @@
 
             let bestPkgLabel = null;
             let highestNet = -Infinity;
+
+            // Warna latar, garis penanda kiri, dan lencana colour-block mengikut pakej
+            const rowThemes = {
+                '3d2n': {
+                    rowBg: 'bg-purple-100/75 hover:bg-purple-200/70',
+                    borderLeft: 'border-l-[6px] border-l-purple-700',
+                    badge: 'bg-purple-700 text-white border-purple-800 shadow-xs',
+                    groupEndBorder: 'border-b-2 border-b-purple-300'
+                },
+                '2d1n': {
+                    rowBg: 'bg-sky-100/75 hover:bg-sky-200/70',
+                    borderLeft: 'border-l-[6px] border-l-sky-600',
+                    badge: 'bg-sky-600 text-white border-sky-700 shadow-xs',
+                    groupEndBorder: 'border-b-2 border-b-sky-300'
+                },
+                '1d': {
+                    rowBg: 'bg-amber-100/75 hover:bg-amber-200/70',
+                    borderLeft: 'border-l-[6px] border-l-amber-500',
+                    badge: 'bg-amber-600 text-white border-amber-700 shadow-xs',
+                    groupEndBorder: 'border-b-2 border-b-amber-300'
+                },
+                'online': {
+                    rowBg: 'bg-emerald-100/75 hover:bg-emerald-200/70',
+                    borderLeft: 'border-l-[6px] border-l-emerald-600',
+                    badge: 'bg-emerald-700 text-white border-emerald-800 shadow-xs',
+                    groupEndBorder: ''
+                }
+            };
 
             Object.values(packagesState).forEach(pkg => {
                 const fees = pkg.participants * pkg.fee;
@@ -1038,7 +1273,10 @@
                     })
                     : [{ hotelLabel: pkg.id === 'online' ? 'Dalam Talian (Online)' : '-', expenses: baseExp }];
 
+                const theme = rowThemes[pkg.id] || rowThemes['3d2n'];
+
                 variants.forEach((v, vIdx) => {
+                    const isLastInGroup = vIdx === variants.length - 1;
                     const net = income - v.expenses;
                     const margin = income > 0 ? ((net / income) * 100).toFixed(1) + '%' : '0.0%';
 
@@ -1054,21 +1292,24 @@
                     }
 
                     const tr = document.createElement('tr');
-                    tr.className = 'hover:bg-slate-50 transition';
+                    tr.className = `${theme.rowBg} ${isLastInGroup ? theme.groupEndBorder : 'border-b border-slate-200/60'} transition`;
 
                     tr.innerHTML = `
-                        <td class="py-3.5 px-4">
-                            <span class="font-bold text-slate-800">${vIdx === 0 ? pkg.shortLabel : `<span class="text-slate-400 font-normal">↳</span> ${pkg.shortLabel}`}</span>
+                        <td class="py-3.5 px-4 ${theme.borderLeft}">
+                            ${vIdx === 0
+                                ? `<span class="inline-flex items-center px-2.5 py-1 rounded-lg border text-xs font-bold ${theme.badge}">${pkg.shortLabel}</span>`
+                                : `<span class="inline-flex items-center gap-1 pl-2 text-xs font-semibold text-slate-600"><span class="text-slate-400">↳</span> ${pkg.shortLabel}</span>`
+                            }
                         </td>
-                        <td class="py-3.5 px-3 text-left text-xs text-slate-700 font-semibold">${v.hotelLabel !== '-' ? v.hotelLabel : '<span class="text-slate-400 italic font-normal">-</span>'}</td>
-                        <td class="py-3.5 px-3 text-center text-slate-700">${pkg.participants}</td>
+                        <td class="py-3.5 px-3 text-left text-xs text-slate-800 font-semibold">${v.hotelLabel !== '-' ? v.hotelLabel : '<span class="text-slate-400 italic font-normal">-</span>'}</td>
+                        <td class="py-3.5 px-3 text-center text-slate-700 font-medium">${pkg.participants}</td>
                         <td class="py-3.5 px-3 text-right text-slate-700">${formatRM(fees)}</td>
                         <td class="py-3.5 px-3 text-right text-slate-700">${formatRM(sponsors)}</td>
                         <td class="py-3.5 px-3 text-right font-semibold text-emerald-700">${formatRM(income)}</td>
                         <td class="py-3.5 px-3 text-right font-semibold text-rose-700">${formatRM(v.expenses)}</td>
                         <td class="py-3.5 px-3 text-right font-bold ${net >= 0 ? 'text-emerald-600' : 'text-rose-600'}">${formatRM(net)}</td>
-                        <td class="py-3.5 px-3 text-center text-slate-700">${margin}</td>
-                        <td class="py-3.5 px-4 text-center text-slate-700">${breakEven}</td>
+                        <td class="py-3.5 px-3 text-center text-slate-700 font-medium">${margin}</td>
+                        <td class="py-3.5 px-4 text-center text-slate-700 font-medium">${breakEven}</td>
                     `;
                     tbody.appendChild(tr);
                 });
@@ -1113,7 +1354,12 @@
                 const validSponsors = pkg.sponsors.filter(s => (s.org && s.org.trim() !== '') || (parseFloat(s.amount) || 0) > 0);
                 const validExpenses = pkg.expenses.filter(e => (e.item && e.item.trim() !== '') || ((e.qty || 0) * (parseFloat(e.unitCost) || 0)) > 0);
                 const validHotels = pkg.id !== 'online'
-                    ? (pkg.hotels || []).filter(h => (h.name && h.name.trim() !== '') || (parseFloat(h.rateAmount) || 0) > 0)
+                    ? (pkg.hotels || []).filter(h =>
+                        (h.name && h.name.trim() !== '') ||
+                        (parseFloat(h.rateAmount) || 0) > 0 ||
+                        (parseFloat(h.hallAmount) || 0) > 0 ||
+                        (h.extras || []).some(ex => (parseFloat(ex.amount) || 0) > 0)
+                    )
                     : [];
 
                 const sponsorRowsHtml = validSponsors.length > 0
@@ -1141,14 +1387,35 @@
                 let hotelSummaryRowsHtml = '';
                 if (validHotels.length > 0) {
                     hotelSummaryRowsHtml = validHotels.map((ht, idx) => {
+                        const pkgRate = parseFloat(ht.rateAmount) || 0;
+                        const pkgCost = ht.rateType === 'per_pax' ? (pkgRate * pkg.participants) : pkgRate;
+
+                        const hallRate = parseFloat(ht.hallAmount) || 0;
+                        const hallCost = (ht.hallType || 'lump_sum') === 'per_pax' ? (hallRate * pkg.participants) : hallRate;
+
                         const htCost = computeHotelCost(ht, pkg.participants);
                         const grandExp = baseExpensesTotal + htCost;
                         const grandNet = income - grandExp;
                         const label = ht.name || `Pilihan Hotel ${idx + 1}`;
-                        const typeLabel = ht.rateType === 'per_pax' ? `${pkg.participants} pax × ${formatRM(ht.rateAmount)}` : 'Sewa Pukal';
+
+                        const breakdownParts = [];
+                        if (pkgCost > 0) breakdownParts.push(`Penginapan: ${formatRM(pkgCost)}`);
+                        if (hallCost > 0) breakdownParts.push(`Dewan: ${formatRM(hallCost)}`);
+                        (ht.extras || []).forEach((ex, exIdx) => {
+                            const exAmt = parseFloat(ex.amount) || 0;
+                            const exVal = ex.type === 'per_pax' ? (exAmt * pkg.participants) : exAmt;
+                            if (exVal > 0) {
+                                breakdownParts.push(`${ex.name || `Tambahan ${exIdx + 1}`}: ${formatRM(exVal)}`);
+                            }
+                        });
+                        const detailText = breakdownParts.length > 0 ? breakdownParts.join(' • ') : 'Tiada caj hotel';
+
                         return `
                             <tr class="bg-indigo-50/60 border-t border-indigo-200 font-semibold text-indigo-950">
-                                <td colspan="2" class="py-1.5 px-2">Pilihan Hotel: ${label} <span class="font-normal text-slate-600">(${typeLabel})</span></td>
+                                <td colspan="2" class="py-1.5 px-2">
+                                    Pilihan Hotel: ${label}
+                                    <span class="block font-normal text-[10px] text-slate-600">${detailText}</span>
+                                </td>
                                 <td class="py-1.5 px-2 text-right">Kos Hotel: ${formatRM(htCost)}</td>
                                 <td class="py-1.5 px-2 text-right text-rose-800">Jumlah B: ${formatRM(grandExp)} <span class="block text-[10px] ${grandNet >= 0 ? 'text-emerald-700' : 'text-rose-700'}">Baki: ${formatRM(grandNet)}</span></td>
                             </tr>
@@ -1264,9 +1531,322 @@
             document.body.removeChild(tempTextarea);
         }
 
+        // Fungsi bantuan untuk format sel CSV (melindungi koma, petikan berganda dan baris baharu)
+        function escapeCSVField(val) {
+            const str = (val === null || val === undefined) ? '' : String(val);
+            if (str.includes('"') || str.includes(',') || str.includes('\n') || str.includes('\r')) {
+                return '"' + str.replace(/"/g, '""') + '"';
+            }
+            return str;
+        }
+
+        // Fungsi penghurai (parser) CSV yang menyokong petikan berganda dan koma dalam teks
+        function parseCSVRows(csvText) {
+            const rows = [];
+            let currentRow = [];
+            let currentField = '';
+            let inQuotes = false;
+
+            for (let i = 0; i < csvText.length; i++) {
+                const char = csvText[i];
+                const nextChar = csvText[i + 1];
+
+                if (inQuotes) {
+                    if (char === '"' && nextChar === '"') {
+                        currentField += '"';
+                        i++;
+                    } else if (char === '"') {
+                        inQuotes = false;
+                    } else {
+                        currentField += char;
+                    }
+                } else {
+                    if (char === '"') {
+                        inQuotes = true;
+                    } else if (char === ',') {
+                        currentRow.push(currentField);
+                        currentField = '';
+                    } else if (char === '\r' && nextChar === '\n') {
+                        currentRow.push(currentField);
+                        rows.push(currentRow);
+                        currentRow = [];
+                        currentField = '';
+                        i++;
+                    } else if (char === '\n' || char === '\r') {
+                        currentRow.push(currentField);
+                        rows.push(currentRow);
+                        currentRow = [];
+                        currentField = '';
+                    } else {
+                        currentField += char;
+                    }
+                }
+            }
+            if (currentField.length > 0 || currentRow.length > 0) {
+                currentRow.push(currentField);
+                rows.push(currentRow);
+            }
+            return rows;
+        }
+
+        // Eksport semua data kalkulator semasa ke dalam fail CSV
+        function exportToCSV() {
+            saveCurrentStateToMemory();
+            const title = document.getElementById('workshop-title').value.trim() || 'Cadangan Pakej Bengkel';
+
+            const csvLines = [];
+            // Pengepala Fail CSV Berstruktur
+            csvLines.push(['JENIS_REKOD', 'PERKARA_UTAMA', 'KUANTITI_ATAU_JENIS', 'PAKEJ_3H2M', 'PAKEJ_2H1M', 'PAKEJ_1HARI', 'PAKEJ_ONLINE'].map(escapeCSVField).join(','));
+
+            // 1. Tajuk Bengkel
+            csvLines.push(['TAJUK', title, '', '', '', '', ''].map(escapeCSVField).join(','));
+
+            // 2. Bilangan Peserta & Kadar Yuran
+            csvLines.push([
+                'PESERTA',
+                'Bilangan Peserta (Pax)',
+                '',
+                packagesState['3d2n'].participants,
+                packagesState['2d1n'].participants,
+                packagesState['1d'].participants,
+                packagesState['online'].participants
+            ].map(escapeCSVField).join(','));
+
+            csvLines.push([
+                'YURAN',
+                'Kadar Yuran / Pax (RM)',
+                '',
+                packagesState['3d2n'].fee,
+                packagesState['2d1n'].fee,
+                packagesState['1d'].fee,
+                packagesState['online'].fee
+            ].map(escapeCSVField).join(','));
+
+            // 3. Penajaan / Sumbangan Organisasi
+            const spCount = packagesState['3d2n'].sponsors.length;
+            for (let i = 0; i < spCount; i++) {
+                csvLines.push([
+                    'PENAJA',
+                    packagesState['3d2n'].sponsors[i]?.org || '',
+                    '',
+                    packagesState['3d2n'].sponsors[i]?.amount || '',
+                    packagesState['2d1n'].sponsors[i]?.amount || '',
+                    packagesState['1d'].sponsors[i]?.amount || '',
+                    packagesState['online'].sponsors[i]?.amount || ''
+                ].map(escapeCSVField).join(','));
+            }
+
+            // 4. Pilihan Lokasi / Hotel (Termasuk Pakej Utama, Sewa Dewan & Kos Tambahan Manual)
+            const htCount = packagesState['3d2n'].hotels.length;
+            for (let i = 0; i < htCount; i++) {
+                const h3 = packagesState['3d2n'].hotels[i] || {};
+                const h2 = packagesState['2d1n'].hotels[i] || {};
+                const h1 = packagesState['1d'].hotels[i] || {};
+
+                csvLines.push([
+                    'HOTEL',
+                    h3.name || '',
+                    h3.rateType || 'per_pax',
+                    h3.rateAmount || '',
+                    h2.rateAmount || '',
+                    h1.rateAmount || '',
+                    ''
+                ].map(escapeCSVField).join(','));
+
+                csvLines.push([
+                    'HOTEL_DEWAN',
+                    h3.name || '',
+                    h3.hallType || 'lump_sum',
+                    h3.hallAmount || '',
+                    h2.hallAmount || '',
+                    h1.hallAmount || '',
+                    ''
+                ].map(escapeCSVField).join(','));
+
+                const exHotelCount = (h3.extras || []).length;
+                for (let j = 0; j < exHotelCount; j++) {
+                    csvLines.push([
+                        'HOTEL_EXTRA',
+                        h3.extras[j]?.name || '',
+                        h3.extras[j]?.type || 'lump_sum',
+                        h3.extras[j]?.amount || '',
+                        h2.extras?.[j]?.amount || '',
+                        h1.extras?.[j]?.amount || '',
+                        ''
+                    ].map(escapeCSVField).join(','));
+                }
+            }
+
+            // 5. Butiran Perbelanjaan
+            const exCount = packagesState['3d2n'].expenses.length;
+            for (let i = 0; i < exCount; i++) {
+                csvLines.push([
+                    'PERBELANJAAN',
+                    packagesState['3d2n'].expenses[i]?.item || '',
+                    packagesState['3d2n'].expenses[i]?.qty ?? 1,
+                    packagesState['3d2n'].expenses[i]?.unitCost || '',
+                    packagesState['2d1n'].expenses[i]?.unitCost || '',
+                    packagesState['1d'].expenses[i]?.unitCost || '',
+                    packagesState['online'].expenses[i]?.unitCost || ''
+                ].map(escapeCSVField).join(','));
+            }
+
+            // Tambah BOM (\uFEFF) supaya Excel & Google Sheets membaca aksara khas dengan tepat
+            const blob = new Blob(['\uFEFF' + csvLines.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const safeFilename = title.replace(/[^a-zA-Z0-9\s-_]/g, '').trim().replace(/\s+/g, '_') || 'Pakej_Bengkel';
+
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', `Kewangan_${safeFilename}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+
+            showToast('Fail CSV berjaya dieksport & dimuat turun!');
+        }
+
+        // Buka dialog pemilihan fail CSV untuk diimport
+        function triggerImportCSV() {
+            const input = document.getElementById('csv-file-input');
+            if (input) {
+                input.value = '';
+                input.click();
+            }
+        }
+
+        // Baca dan muatkan semula data daripada fail CSV ke dalam borang
+        function handleImportCSV(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                try {
+                    const text = e.target.result.replace(/^\uFEFF/, '');
+                    const rows = parseCSVRows(text);
+                    if (rows.length < 2) {
+                        showToast('Fail CSV kosong atau format tidak sah.');
+                        return;
+                    }
+
+                    // Kosongkan paparan sedia ada sebelum memuatkan data baharu
+                    ALL_PKG_IDS.forEach(pid => {
+                        packagesState[pid].participants = 0;
+                        packagesState[pid].fee = 0;
+                        packagesState[pid].hotels = [];
+                        packagesState[pid].sponsors = [];
+                        packagesState[pid].expenses = [];
+                        document.getElementById(`pax-${pid}`).value = 0;
+                        document.getElementById(`fee-${pid}`).value = 0;
+                    });
+                    document.getElementById('hotels-container').innerHTML = '';
+                    document.getElementById('sponsors-container').innerHTML = '';
+                    document.getElementById('expenses-container').innerHTML = '';
+
+                    let importedCount = 0;
+
+                    rows.forEach((cols, index) => {
+                        if (index === 0 && cols[0] === 'JENIS_REKOD') return; // Langkau baris pengepala
+                        const type = (cols[0] || '').trim().toUpperCase();
+                        const mainLabel = cols[1] || '';
+                        const subInfo = cols[2] || '';
+                        const val3d2n = cols[3] ?? '';
+                        const val2d1n = cols[4] ?? '';
+                        const val1d = cols[5] ?? '';
+                        const valOnline = cols[6] ?? '';
+
+                        if (type === 'TAJUK') {
+                            document.getElementById('workshop-title').value = mainLabel;
+                            importedCount++;
+                        } else if (type === 'PESERTA') {
+                            document.getElementById('pax-3d2n').value = parseFloat(val3d2n) || 0;
+                            document.getElementById('pax-2d1n').value = parseFloat(val2d1n) || 0;
+                            document.getElementById('pax-1d').value = parseFloat(val1d) || 0;
+                            document.getElementById('pax-online').value = parseFloat(valOnline) || 0;
+                            importedCount++;
+                        } else if (type === 'YURAN') {
+                            document.getElementById('fee-3d2n').value = parseFloat(val3d2n) || 0;
+                            document.getElementById('fee-2d1n').value = parseFloat(val2d1n) || 0;
+                            document.getElementById('fee-1d').value = parseFloat(val1d) || 0;
+                            document.getElementById('fee-online').value = parseFloat(valOnline) || 0;
+                            importedCount++;
+                        } else if (type === 'PENAJA') {
+                            const syncId = generateSyncId('sp');
+                            renderSponsorRow(mainLabel, {
+                                '3d2n': val3d2n,
+                                '2d1n': val2d1n,
+                                '1d': val1d,
+                                'online': valOnline
+                            }, syncId);
+                            importedCount++;
+                        } else if (type === 'HOTEL') {
+                            const syncId = generateSyncId('ht');
+                            const rateType = (subInfo === 'lump_sum') ? 'lump_sum' : 'per_pax';
+                            renderHotelRow(mainLabel, {
+                                rateType: rateType,
+                                hallType: 'lump_sum',
+                                rates: { '3d2n': val3d2n, '2d1n': val2d1n, '1d': val1d },
+                                halls: { '3d2n': '', '2d1n': '', '1d': '' }
+                            }, syncId);
+                            importedCount++;
+                        } else if (type === 'HOTEL_DEWAN') {
+                            const hotelRows = document.querySelectorAll('#hotels-container .hotel-row');
+                            const lastHotelRow = hotelRows[hotelRows.length - 1];
+                            if (lastHotelRow) {
+                                lastHotelRow.querySelector('.hotel-hall-type-select').value = (subInfo === 'per_pax') ? 'per_pax' : 'lump_sum';
+                                lastHotelRow.querySelector('.hotel-hall-3d2n').value = val3d2n;
+                                lastHotelRow.querySelector('.hotel-hall-2d1n').value = val2d1n;
+                                lastHotelRow.querySelector('.hotel-hall-1d').value = val1d;
+                            }
+                        } else if (type === 'HOTEL_EXTRA') {
+                            const hotelRows = document.querySelectorAll('#hotels-container .hotel-row');
+                            const lastHotelRow = hotelRows[hotelRows.length - 1];
+                            if (lastHotelRow) {
+                                const extrasContainer = lastHotelRow.querySelector('.hotel-extras-container');
+                                const extraType = (subInfo === 'per_pax') ? 'per_pax' : 'lump_sum';
+                                addHotelExtraRow(extrasContainer, mainLabel, extraType, {
+                                    '3d2n': val3d2n,
+                                    '2d1n': val2d1n,
+                                    '1d': val1d
+                                });
+                            }
+                        } else if (type === 'PERBELANJAAN') {
+                            const syncId = generateSyncId('ex');
+                            const qty = parseFloat(subInfo) || 0;
+                            renderExpenseRow(mainLabel, qty, {
+                                '3d2n': val3d2n,
+                                '2d1n': val2d1n,
+                                '1d': val1d,
+                                'online': valOnline
+                            }, syncId);
+                            importedCount++;
+                        }
+                    });
+
+                    toggleEmptyStates();
+                    if (window.lucide) lucide.createIcons();
+                    calculateAll();
+
+                    if (importedCount > 0) {
+                        showToast('Data fail CSV berjaya diimport dan dikemas kini!');
+                    } else {
+                        showToast('Tiada rekod sah ditemui dalam fail CSV ini.');
+                    }
+                } catch (err) {
+                    console.error(err);
+                    showToast('Ralat semasa membaca fail CSV.');
+                }
+            };
+            reader.readAsText(file, 'UTF-8');
+        }
+
         // Mulakan aplikasi apabila halaman siap dimuatkan
         window.onload = function () {
-            lucide.createIcons();
+            if (window.lucide) {
+                lucide.createIcons();
+            }
             toggleEmptyStates();
             calculateAll();
         };
